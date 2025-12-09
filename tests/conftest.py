@@ -146,3 +146,78 @@ def mock_oidc_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OIDC_ISSUER", "https://keycloak.example.com/auth/realms/test")
     monkeypatch.setenv("OIDC_CLIENT_ID", "test-client")
     monkeypatch.setenv("OIDC_CLIENT_SECRET", "test-secret")
+
+
+# Integration testing fixtures
+
+@pytest.fixture(scope="session")
+def mock_oauth_server():
+    """Create and start a mock OAuth server for integration tests.
+
+    This fixture starts a mock OAuth/OIDC server that implements:
+    - OIDC discovery
+    - Authorization Code Flow with PKCE
+    - Device Code Flow
+    - Token refresh
+
+    The server runs on localhost:9999 and auto-approves all requests.
+
+    Example:
+        >>> @pytest.mark.integration
+        >>> def test_with_mock_server(mock_oauth_server):
+        ...     config = AuthConfig(
+        ...         method="oidc",
+        ...         oidc_issuer=mock_oauth_server.base_url,
+        ...         client_id="test-client"
+        ...     )
+    """
+    from .mock_oauth_server import MockOAuthServer
+
+    server = MockOAuthServer(host="localhost", port=9999)
+    server.auto_approve = True
+    server.start()
+
+    yield server
+
+    server.stop()
+
+
+@pytest.fixture
+def oauth_config(mock_oauth_server):
+    """Get configuration for mock OAuth server.
+
+    Args:
+        mock_oauth_server: Mock OAuth server fixture
+
+    Returns:
+        Dictionary with OAuth server configuration
+
+    Example:
+        >>> def test_oauth(oauth_config):
+        ...     assert oauth_config["issuer"] == "http://localhost:9999"
+    """
+    return {
+        "issuer": mock_oauth_server.base_url,
+        "client_id": mock_oauth_server.client_id,
+        "client_secret": mock_oauth_server.client_secret,
+        "token_endpoint": f"{mock_oauth_server.base_url}/token",
+        "auth_endpoint": f"{mock_oauth_server.base_url}/authorize",
+        "device_endpoint": f"{mock_oauth_server.base_url}/device/code",
+    }
+
+
+# Pytest markers for different test levels
+def pytest_configure(config):
+    """Register custom pytest markers."""
+    config.addinivalue_line(
+        "markers", "unit: Unit tests that don't require external services"
+    )
+    config.addinivalue_line(
+        "markers", "integration: Integration tests that use mock servers"
+    )
+    config.addinivalue_line(
+        "markers", "e2e: End-to-end tests that require real external services"
+    )
+    config.addinivalue_line(
+        "markers", "slow: Tests that take longer to run"
+    )

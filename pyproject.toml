@@ -63,6 +63,20 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-fail-under=90",
+    "--strict-markers",
+    "-ra",  # Show summary of all test outcomes
+]
+markers = [
+    "unit: Unit tests that don't require external services",
+    "integration: Integration tests that use mock servers",
+    "e2e: End-to-end tests that require real external services",
+    "slow: Tests that take longer to run",
+]
+# Filter warnings
+filterwarnings = [
+    "error",  # Treat warnings as errors
+    "ignore::DeprecationWarning",  # Ignore deprecation warnings
+    "ignore::pytest.PytestUnraisableExceptionWarning",  # Ignore unraisable exceptions
 ]
 
 [tool.mypy]
