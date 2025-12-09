@@ -232,8 +232,8 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             hashlib.sha256(code_verifier.encode('utf-8')).digest()
         ).decode('utf-8').rstrip('=')
 
-        # Start local callback server
-        callback_port = self._find_free_port()
+        # Start local callback server on configured port
+        callback_port = self.config.oidc_callback_port
         redirect_uri = f"http://localhost:{callback_port}/callback"
 
         # Prepare to receive auth code
@@ -348,9 +348,21 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             print("Authentication successful!\n")
 
         except requests.RequestException as e:
+            # Try to extract OAuth error details from response
+            error_detail = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_type = error_data.get("error", "unknown_error")
+                    error_desc = error_data.get("error_description", "")
+                    error_detail = f"{error_type}: {error_desc}" if error_desc else error_type
+                except Exception:
+                    # If we can't parse JSON, use the original error
+                    pass
+
             raise AuthenticationError(
                 "Failed to exchange authorization code for token",
-                str(e)
+                error_detail
             ) from e
 
     def _create_api_client(self) -> ApiClient:
@@ -430,20 +442,6 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             logger.warning("keyring module not available. Install with: pip install keyring")
         except Exception as e:
             logger.warning(f"Failed to save token to keyring: {e}")
-
-    @staticmethod
-    def _find_free_port() -> int:
-        """Find a free port for the callback server.
-
-        Returns:
-            Available port number
-        """
-        import socket
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
-            s.listen(1)
-            port = s.getsockname()[1]
-        return port
 
     def get_description(self) -> str:
         """Get description of this strategy.

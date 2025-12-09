@@ -32,9 +32,11 @@ class AuthConfig:
         oidc_issuer: OIDC issuer URL (required for OIDC)
         client_id: OIDC client ID (required for OIDC)
         client_secret: OIDC client secret (for confidential clients)
+        openshift_token: OpenShift OAuth token (for OpenShift method)
         scopes: OIDC scopes to request
         use_device_flow: Use Device Code Flow instead of Authorization Code
         use_keyring: Store refresh tokens in system keyring
+        oidc_callback_port: Port for OAuth callback server (default: 8080)
         ca_cert: Path to custom CA certificate bundle
         verify_ssl: Verify SSL certificates (WARNING: only disable for development)
         kubeconfig_path: Path to kubeconfig file (overrides KUBECONFIG env var)
@@ -61,6 +63,7 @@ class AuthConfig:
     scopes: List[str] = field(default_factory=lambda: ["openid"])
     use_device_flow: bool = False
     use_keyring: bool = False
+    oidc_callback_port: int = 8080
     ca_cert: Optional[str] = None
     verify_ssl: bool = True
     kubeconfig_path: Optional[str] = None
@@ -179,6 +182,13 @@ class AuthConfig:
         if not self.k8s_api_host:
             self.k8s_api_host = os.getenv("K8S_API_HOST")
 
+        # Validate callback port
+        if self.oidc_callback_port < 1 or self.oidc_callback_port > 65535:
+            raise ConfigurationError(
+                f"Invalid OIDC callback port: {self.oidc_callback_port}",
+                "Port must be between 1 and 65535"
+            )
+
     def __repr__(self) -> str:
         """Return string representation with sensitive fields redacted.
 
@@ -199,6 +209,7 @@ class AuthConfig:
             "scopes": self.scopes,
             "use_device_flow": self.use_device_flow,
             "use_keyring": self.use_keyring,
+            "oidc_callback_port": self.oidc_callback_port,
             "ca_cert": self.ca_cert,
             "verify_ssl": self.verify_ssl,
             "kubeconfig_path": self.kubeconfig_path,

@@ -108,6 +108,30 @@ class TestAuthConfigValidation:
 
         assert "Kubeconfig file not found" in str(exc_info.value)
 
+    def test_invalid_callback_port_too_low(self, mock_env_vars):
+        """Test that callback port < 1 raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig(oidc_callback_port=0)
+
+        assert "Invalid OIDC callback port" in str(exc_info.value)
+
+    def test_invalid_callback_port_too_high(self, mock_env_vars):
+        """Test that callback port > 65535 raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig(oidc_callback_port=70000)
+
+        assert "Invalid OIDC callback port" in str(exc_info.value)
+
+    def test_valid_callback_port(self, mock_env_vars):
+        """Test that valid callback port is accepted."""
+        config = AuthConfig(oidc_callback_port=3000)
+        assert config.oidc_callback_port == 3000
+
+    def test_default_callback_port(self, mock_env_vars):
+        """Test that default callback port is 8080."""
+        config = AuthConfig()
+        assert config.oidc_callback_port == 8080
+
 
 class TestAuthConfigEnvironmentVariables:
     """Test environment variable loading."""
