@@ -10,14 +10,15 @@ Run with:
     pytest tests/integration/ -v  # Run all integration tests
 """
 
-import pytest
 import warnings
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from openshift_ai_auth import AuthConfig
 from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.strategies.oidc import OIDCStrategy
 from openshift_ai_auth.exceptions import AuthenticationError
+from openshift_ai_auth.strategies.oidc import OIDCStrategy
 
 
 @pytest.mark.integration
@@ -45,11 +46,11 @@ class TestOIDCIntegrationAuthCodeFlow:
         assert strategy.is_available()
 
         # Mock the browser opening and callback handling
-        with patch('webbrowser.open') as mock_browser:
+        with patch('webbrowser.open'):
             # Mock the callback server to simulate successful auth
             with patch('openshift_ai_auth.strategies.oidc.HTTPServer') as mock_server:
                 # Simulate auth code callback
-                mock_handler_instance = MagicMock()
+                MagicMock()
                 mock_server_instance = MagicMock()
                 mock_server.return_value = mock_server_instance
 
@@ -59,17 +60,7 @@ class TestOIDCIntegrationAuthCodeFlow:
                 def simulate_callback(*args, **kwargs):
                     """Simulate receiving auth code."""
                     # Request auth code from mock server
-                    import requests
-                    from urllib.parse import urlencode
 
-                    params = {
-                        "client_id": mock_oauth_server.client_id,
-                        "response_type": "code",
-                        "redirect_uri": "http://localhost:8080/callback",
-                        "code_challenge": "test_challenge",
-                        "code_challenge_method": "S256",
-                        "state": "test_state",
-                    }
 
                     # The mock server will auto-approve and return a code
                     # We simulate this by directly calling token endpoint
@@ -79,7 +70,6 @@ class TestOIDCIntegrationAuthCodeFlow:
 
                 # For this test, we'll patch the entire auth flow
                 # to use our mock server's tokens
-                original_auth = strategy._authenticate_auth_code_flow
 
                 def mock_auth():
                     """Mock authentication that uses real mock server."""
@@ -241,10 +231,11 @@ class TestOIDCIntegrationPKCE:
 
     def test_pkce_code_challenge_generation(self, mock_oauth_server, mock_env_vars):
         """Test that PKCE code challenge is properly generated and verified."""
-        import requests
         import base64
         import hashlib
         import secrets
+
+        import requests
 
         # Generate PKCE parameters
         code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
@@ -272,7 +263,7 @@ class TestOIDCIntegrationPKCE:
         assert "code=" in location
 
         # Extract auth code
-        from urllib.parse import urlparse, parse_qs
+        from urllib.parse import parse_qs, urlparse
         parsed = urlparse(location)
         params = parse_qs(parsed.query)
         auth_code = params["code"][0]
@@ -297,10 +288,11 @@ class TestOIDCIntegrationPKCE:
 
     def test_pkce_verification_failure(self, mock_oauth_server, mock_env_vars):
         """Test that PKCE verification fails with wrong verifier."""
-        import requests
         import base64
         import hashlib
         import secrets
+
+        import requests
 
         # Generate PKCE parameters
         code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
@@ -322,7 +314,7 @@ class TestOIDCIntegrationPKCE:
         )
 
         # Extract auth code
-        from urllib.parse import urlparse, parse_qs
+        from urllib.parse import parse_qs, urlparse
         location = auth_response.headers.get("Location", "")
         parsed = urlparse(location)
         params = parse_qs(parsed.query)

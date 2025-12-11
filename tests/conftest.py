@@ -5,9 +5,8 @@ This module provides reusable fixtures for mocking Kubernetes
 environments, kubeconfig files, and service account tokens.
 """
 
-import os
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 

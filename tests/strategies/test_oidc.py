@@ -10,19 +10,17 @@ Tests cover:
 - Error handling
 """
 
-import json
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock, call
-from pathlib import Path
 
 from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.strategies.oidc import OIDCStrategy
 from openshift_ai_auth.exceptions import (
     AuthenticationError,
     ConfigurationError,
     StrategyNotAvailableError,
 )
-
+from openshift_ai_auth.strategies.oidc import OIDCStrategy
 
 # Mock OIDC discovery document
 MOCK_OIDC_CONFIG = {

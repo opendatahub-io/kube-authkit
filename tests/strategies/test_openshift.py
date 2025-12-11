@@ -9,19 +9,17 @@ Tests cover:
 - Error handling
 """
 
-import json
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
 
 from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
 from openshift_ai_auth.exceptions import (
     AuthenticationError,
     ConfigurationError,
     StrategyNotAvailableError,
 )
-
+from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
 
 # Mock OpenShift OAuth metadata
 MOCK_OAUTH_METADATA = {

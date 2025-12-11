@@ -7,7 +7,6 @@ us to easily add new authentication methods without modifying existing code.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from kubernetes.client import ApiClient
 

@@ -8,10 +8,11 @@ Tests cover:
 - get_k8s_client() function
 """
 
-import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from openshift_ai_auth import get_k8s_client, AuthConfig
+import pytest
+
+from openshift_ai_auth import AuthConfig, get_k8s_client
 from openshift_ai_auth.exceptions import AuthenticationError, ConfigurationError
 from openshift_ai_auth.factory import AuthFactory
 
@@ -74,7 +75,7 @@ class TestAuthFactoryStrategySelection:
         """Test that unknown method raises ConfigurationError."""
         # The validation happens in AuthConfig.__post_init__, not in factory.get_strategy()
         with pytest.raises(ConfigurationError) as exc_info:
-            config = AuthConfig(method="unknown")
+            AuthConfig(method="unknown")
 
         assert "Invalid authentication method" in str(exc_info.value)
 

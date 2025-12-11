@@ -17,8 +17,8 @@ import secrets
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict, Any, Optional
-from urllib.parse import parse_qs, urlparse, urlencode
+from typing import Any, Optional
+from urllib.parse import parse_qs, urlencode, urlparse
 
 
 class MockOAuthServer:
@@ -38,9 +38,9 @@ class MockOAuthServer:
         self.base_url = f"http://{host}:{port}"
 
         # Storage for active flows
-        self.auth_codes: Dict[str, Dict[str, Any]] = {}
-        self.device_codes: Dict[str, Dict[str, Any]] = {}
-        self.tokens: Dict[str, Dict[str, Any]] = {}
+        self.auth_codes: dict[str, dict[str, Any]] = {}
+        self.device_codes: dict[str, dict[str, Any]] = {}
+        self.tokens: dict[str, dict[str, Any]] = {}
 
         # Configuration
         self.issuer = self.base_url
@@ -135,7 +135,7 @@ class MockOAuthServer:
                 }
                 self._send_json(200, discovery)
 
-            def _handle_authorize(self, params: Dict[str, list]):
+            def _handle_authorize(self, params: dict[str, list]):
                 """Handle authorization request."""
                 client_id = params.get("client_id", [""])[0]
                 redirect_uri = params.get("redirect_uri", [""])[0]
@@ -171,7 +171,7 @@ class MockOAuthServer:
                     # Return approval page (for manual testing)
                     self._send_html(200, "<h1>Approval Page</h1><p>Auto-approve is disabled</p>")
 
-            def _handle_token(self, params: Dict[str, list]):
+            def _handle_token(self, params: dict[str, list]):
                 """Handle token endpoint requests."""
                 grant_type = params.get("grant_type", [""])[0]
                 client_id = params.get("client_id", [""])[0]
@@ -188,10 +188,10 @@ class MockOAuthServer:
                         "error_description": f"Grant type '{grant_type}' is not supported"
                     })
 
-            def _handle_token_auth_code(self, params: Dict[str, list], client_id: str):
+            def _handle_token_auth_code(self, params: dict[str, list], client_id: str):
                 """Handle authorization code grant."""
                 code = params.get("code", [""])[0]
-                redirect_uri = params.get("redirect_uri", [""])[0]
+                params.get("redirect_uri", [""])[0]
                 code_verifier = params.get("code_verifier", [""])[0]
 
                 # Validate auth code
@@ -259,7 +259,7 @@ class MockOAuthServer:
                     "scope": "openid profile email"
                 })
 
-            def _handle_token_refresh(self, params: Dict[str, list], client_id: str):
+            def _handle_token_refresh(self, params: dict[str, list], client_id: str):
                 """Handle refresh token grant."""
                 refresh_token = params.get("refresh_token", [""])[0]
 
@@ -285,7 +285,7 @@ class MockOAuthServer:
                     "scope": "openid profile email"
                 })
 
-            def _handle_device_code(self, params: Dict[str, list]):
+            def _handle_device_code(self, params: dict[str, list]):
                 """Handle device code request."""
                 client_id = params.get("client_id", [""])[0]
 
@@ -308,7 +308,7 @@ class MockOAuthServer:
                     "interval": 1  # Fast polling for tests
                 })
 
-            def _handle_token_device_code(self, params: Dict[str, list], client_id: str):
+            def _handle_token_device_code(self, params: dict[str, list], client_id: str):
                 """Handle device code token request (polling)."""
                 device_code = params.get("device_code", [""])[0]
 

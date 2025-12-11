@@ -8,7 +8,7 @@ authentication configuration options.
 import os
 import warnings
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from .exceptions import ConfigurationError
 
@@ -60,7 +60,7 @@ class AuthConfig:
     client_id: Optional[str] = None
     client_secret: Optional[str] = None
     openshift_token: Optional[str] = None
-    scopes: List[str] = field(default_factory=lambda: ["openid"])
+    scopes: list[str] = field(default_factory=lambda: ["openid"])
     use_device_flow: bool = False
     use_keyring: bool = False
     oidc_callback_port: int = 8080
