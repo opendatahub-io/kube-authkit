@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from openshift_ai_auth import AuthConfig
+from openshift_ai_auth.config import SecurityWarning
 from openshift_ai_auth.exceptions import (
     AuthenticationError,
     StrategyNotAvailableError,
@@ -170,7 +171,10 @@ class TestInClusterStrategyAuthentication:
         mock_client_instance = MagicMock()
         mock_api_client.return_value = mock_client_instance
 
-        config = AuthConfig(method="incluster", verify_ssl=False)
+        # Expect SecurityWarning when disabling SSL verification
+        with pytest.warns(SecurityWarning, match="TLS/SSL verification is disabled"):
+            config = AuthConfig(method="incluster", verify_ssl=False)
+
         strategy = InClusterStrategy(config)
 
         # Mock is_available to return True
