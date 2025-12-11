@@ -97,7 +97,7 @@ class AuthStrategy(ABC):
         Raises:
             TokenRefreshError: If token refresh fails
         """
-        pass
+        raise NotImplementedError
 
     def get_description(self) -> str:
         """Get human-readable description of this strategy.
