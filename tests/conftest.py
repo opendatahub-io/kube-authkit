@@ -76,7 +76,7 @@ def mock_service_account(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Pat
 
     # Create token file
     token_path = sa_path / "token"
-    token_path.write_text("eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.test-service-account-token")
+    token_path.write_text("test-sa-token-content")
 
     # Create CA certificate file
     ca_path = sa_path / "ca.crt"
