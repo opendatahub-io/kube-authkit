@@ -103,14 +103,16 @@ class TestKubeConfigIntegrationErrorHandling:
     """Integration tests for KubeConfig error handling."""
 
     def test_authenticate_with_nonexistent_file(self, tmp_path):
-        """Test authentication fails gracefully with nonexistent file."""
+        """Test configuration validation catches nonexistent file."""
+        from openshift_ai_auth.exceptions import ConfigurationError
+
         non_existent = tmp_path / "nonexistent" / "config"
 
-        config = AuthConfig(method="kubeconfig", kubeconfig_path=str(non_existent))
-        strategy = KubeConfigStrategy(config)
+        # AuthConfig now validates kubeconfig_path exists during initialization
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig(method="kubeconfig", kubeconfig_path=str(non_existent))
 
-        # Strategy should not be available
-        assert not strategy.is_available()
+        assert "Kubeconfig file not found" in str(exc_info.value)
 
     def test_authenticate_with_invalid_yaml(self, tmp_path):
         """Test authentication fails with invalid YAML."""

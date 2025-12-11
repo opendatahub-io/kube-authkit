@@ -151,14 +151,11 @@ class TestFactoryIntegrationStrategySelection:
             assert isinstance(strategy3, OpenShiftOAuthStrategy)
 
     def test_factory_validates_strategy_availability(self, tmp_path):
-        """Test factory validates strategy is available before returning."""
-        # Create config with non-existent kubeconfig path
+        """Test configuration validates kubeconfig path during initialization."""
+        # AuthConfig now validates kubeconfig_path exists during initialization
         non_existent = tmp_path / "nonexistent" / "config"
 
-        config = AuthConfig(method="kubeconfig", kubeconfig_path=str(non_existent))
-        factory = AuthFactory(config)
-
         with pytest.raises(ConfigurationError) as exc_info:
-            factory.get_strategy()
+            AuthConfig(method="kubeconfig", kubeconfig_path=str(non_existent))
 
-        assert "not available" in str(exc_info.value)
+        assert "Kubeconfig file not found" in str(exc_info.value)

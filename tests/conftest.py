@@ -53,10 +53,8 @@ users:
 def mock_service_account(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Create mock service account files for in-cluster authentication.
 
-    Creates the standard Kubernetes service account directory structure:
-    - /var/run/secrets/kubernetes.io/serviceaccount/token
-    - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-    - /var/run/secrets/kubernetes.io/serviceaccount/namespace
+    Creates the standard Kubernetes service account directory structure and patches
+    the hardcoded paths in InClusterStrategy to use the mock files.
 
     Args:
         tmp_path: pytest temporary directory
@@ -93,8 +91,17 @@ test-certificate-data
     namespace_path.write_text("default")
 
     # Set environment variable for Kubernetes service
-    monkeypatch.setenv("KUBERNETES_SERVICE_HOST", "10.0.0.1")
+    monkeypatch.setenv("KUBERNETES_SERVICE_HOST", "kubernetes.default.svc")
     monkeypatch.setenv("KUBERNETES_SERVICE_PORT", "443")
+
+    # Patch the hardcoded paths in InClusterStrategy to use our mock files
+    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.TOKEN_PATH", token_path)
+    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.CA_CERT_PATH", ca_path)
+    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.NAMESPACE_PATH", namespace_path)
+
+    # Also patch the kubernetes library's hardcoded paths
+    monkeypatch.setattr("kubernetes.config.incluster_config.SERVICE_TOKEN_FILENAME", str(token_path))
+    monkeypatch.setattr("kubernetes.config.incluster_config.SERVICE_CERT_FILENAME", str(ca_path))
 
     return sa_path
 
