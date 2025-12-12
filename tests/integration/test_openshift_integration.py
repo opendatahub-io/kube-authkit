@@ -9,10 +9,10 @@ import warnings
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import StrategyNotAvailableError
-from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
+from kube_authkit import AuthConfig
+from kube_authkit.config import SecurityWarning
+from kube_authkit.exceptions import StrategyNotAvailableError
+from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
 
 
 @pytest.mark.integration

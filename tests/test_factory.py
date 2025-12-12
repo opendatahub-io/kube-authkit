@@ -12,17 +12,17 @@ from unittest.mock import patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig, get_k8s_client
-from openshift_ai_auth.exceptions import AuthenticationError, ConfigurationError
-from openshift_ai_auth.factory import AuthFactory
-from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
+from kube_authkit import AuthConfig, get_k8s_client
+from kube_authkit.exceptions import AuthenticationError, ConfigurationError
+from kube_authkit.factory import AuthFactory
+from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
 
 
 class TestGetK8sClient:
     """Test the main get_k8s_client() entry point."""
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
     def test_with_default_config(self, mock_incluster_avail, mock_kube_avail, mock_env_vars):
         """Test get_k8s_client with no arguments raises error when no auth available."""
         # Mock both strategies as unavailable
@@ -34,7 +34,7 @@ class TestGetK8sClient:
 
         assert "No authentication method available" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_with_explicit_config(self, mock_is_available, mock_env_vars):
         """Test get_k8s_client with explicit configuration."""
         # Mock strategy as unavailable to trigger ConfigurationError
@@ -50,7 +50,7 @@ class TestGetK8sClient:
 class TestAuthFactoryStrategySelection:
     """Test strategy selection logic."""
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_explicit_kubeconfig_method(self, mock_is_available, mock_env_vars):
         """Test selecting KubeConfig strategy explicitly."""
         # Mock strategy as unavailable to trigger ConfigurationError
@@ -84,8 +84,8 @@ class TestAuthFactoryStrategySelection:
 class TestAuthFactoryAutoDetection:
     """Test auto-detection logic."""
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
     def test_auto_detect_with_oidc_env(self, mock_incluster_avail, mock_kube_avail, mock_oidc_env):
         """Test auto-detection prefers OIDC when env vars present."""
         # Mock both strategies as unavailable
@@ -104,8 +104,8 @@ class TestAuthFactoryAutoDetection:
         error_msg = str(exc_info.value)
         assert "No authentication method available" in error_msg
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
     def test_auto_detect_no_auth_available(self, mock_incluster_avail, mock_kube_avail, mock_env_vars):
         """Test auto-detection when no auth method is available."""
         # Mock both strategies as unavailable
@@ -123,7 +123,7 @@ class TestAuthFactoryAutoDetection:
         assert "In-cluster service account - not available" in error_msg
         assert "KubeConfig file" in error_msg
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_auto_detect_kubeconfig(self, mock_is_available, mock_env_vars):
         """Test auto-detection selects KubeConfig when available."""
         mock_is_available.return_value = True
@@ -133,10 +133,10 @@ class TestAuthFactoryAutoDetection:
         strategy = factory.get_strategy()
 
         # Should return a KubeConfigStrategy
-        from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
+        from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
         assert isinstance(strategy, KubeConfigStrategy)
 
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
     def test_auto_detect_incluster(self, mock_is_available, mock_env_vars):
         """Test auto-detection selects InCluster when available."""
         mock_is_available.return_value = True
@@ -146,11 +146,11 @@ class TestAuthFactoryAutoDetection:
         strategy = factory.get_strategy()
 
         # Should return an InClusterStrategy
-        from openshift_ai_auth.strategies.incluster import InClusterStrategy
+        from kube_authkit.strategies.incluster import InClusterStrategy
         assert isinstance(strategy, InClusterStrategy)
 
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_auto_detect_precedence(self, mock_kube_avail, mock_incluster_avail, mock_env_vars):
         """Test that in-cluster is preferred over kubeconfig in auto-detection."""
         # Both are available
@@ -162,7 +162,7 @@ class TestAuthFactoryAutoDetection:
         strategy = factory.get_strategy()
 
         # Should prefer InCluster
-        from openshift_ai_auth.strategies.incluster import InClusterStrategy
+        from kube_authkit.strategies.incluster import InClusterStrategy
         assert isinstance(strategy, InClusterStrategy)
 
 
@@ -206,7 +206,7 @@ class TestAuthFactoryErrorHandling:
         assert client is not None
         assert client.configuration.host == "https://127.0.0.1:6443"
 
-    @patch('openshift_ai_auth.factory.AuthFactory.get_strategy')
+    @patch('kube_authkit.factory.AuthFactory.get_strategy')
     def test_get_k8s_client_strategy_error(self, mock_get_strategy):
         """Test get_k8s_client handles strategy errors."""
         mock_get_strategy.side_effect = ConfigurationError("Strategy error", "Details")
@@ -216,7 +216,7 @@ class TestAuthFactoryErrorHandling:
         with pytest.raises(ConfigurationError):
             get_k8s_client(config)
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_get_strategy_explicit_method_not_available(self, mock_is_available, mock_kubeconfig):
         """Test get_strategy raises error when explicit method not available."""
         mock_is_available.return_value = False
@@ -244,9 +244,9 @@ class TestAuthFactoryErrorHandling:
 
         assert isinstance(strategy, OpenShiftOAuthStrategy)
 
-    @patch('openshift_ai_auth.strategies.openshift.OpenShiftOAuthStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.incluster.InClusterStrategy.is_available')
-    @patch('openshift_ai_auth.strategies.kubeconfig.KubeConfigStrategy.is_available')
+    @patch('kube_authkit.strategies.openshift.OpenShiftOAuthStrategy.is_available')
+    @patch('kube_authkit.strategies.incluster.InClusterStrategy.is_available')
+    @patch('kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available')
     def test_auto_detect_openshift_not_available_fallback(self, mock_kube_avail, mock_incluster_avail, mock_openshift_avail, monkeypatch):
         """Test auto-detection falls back when OpenShift not available."""
         monkeypatch.setenv("OPENSHIFT_TOKEN", "sha256~test-token")

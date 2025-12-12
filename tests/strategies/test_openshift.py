@@ -13,13 +13,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.exceptions import (
+from kube_authkit import AuthConfig
+from kube_authkit.exceptions import (
     AuthenticationError,
     ConfigurationError,
     StrategyNotAvailableError,
 )
-from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
+from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
 
 # Mock OpenShift OAuth metadata
 MOCK_OAUTH_METADATA = {
@@ -35,7 +35,7 @@ MOCK_OAUTH_METADATA = {
 class TestOpenShiftOAuthStrategyAvailability:
     """Test availability detection for OpenShift OAuth strategy."""
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_is_available_with_explicit_token(self, mock_get):
         """Test availability with explicit token."""
         config = AuthConfig(
@@ -63,7 +63,7 @@ class TestOpenShiftOAuthStrategyAvailability:
 
         assert strategy.is_available() is True
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_is_available_with_valid_oauth_server(self, mock_get):
         """Test availability when OAuth server is reachable."""
         # Mock discovery response
@@ -88,7 +88,7 @@ class TestOpenShiftOAuthStrategyAvailability:
 
         assert strategy.is_available() is False
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_is_not_available_discovery_fails(self, mock_get):
         """Test unavailability when discovery fails."""
         # Mock discovery failure
@@ -106,7 +106,7 @@ class TestOpenShiftOAuthStrategyAvailability:
 class TestOpenShiftOAuthDiscovery:
     """Test OpenShift OAuth server discovery."""
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_discover_oauth_metadata_success(self, mock_get):
         """Test successful OAuth metadata discovery."""
         # Mock discovery response
@@ -126,7 +126,7 @@ class TestOpenShiftOAuthDiscovery:
         assert result == MOCK_OAUTH_METADATA
         assert result["authorization_endpoint"] == MOCK_OAUTH_METADATA["authorization_endpoint"]
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_discover_oauth_metadata_cached(self, mock_get):
         """Test that discovery result is cached."""
         # Mock discovery response
@@ -149,7 +149,7 @@ class TestOpenShiftOAuthDiscovery:
         assert mock_get.call_count == 1
         assert result1 == result2
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.get')
     def test_discover_oauth_metadata_network_error(self, mock_get):
         """Test discovery handles network errors."""
         import requests
@@ -185,7 +185,7 @@ class TestOpenShiftOAuthAuthentication:
         assert api_client.configuration.host == "https://api.cluster.example.com:6443"
         assert "Bearer sha256~test-token" in str(api_client.configuration.api_key.get("authorization", ""))
 
-    @patch('openshift_ai_auth.strategies.openshift.os.getenv')
+    @patch('kube_authkit.strategies.openshift.os.getenv')
     def test_authenticate_with_env_token(self, mock_getenv):
         """Test authentication with token from environment."""
         def getenv_side_effect(key, default=None):
@@ -216,10 +216,10 @@ class TestOpenShiftOAuthAuthentication:
 
         assert "not available" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
-    @patch('openshift_ai_auth.strategies.openshift.requests.post')
-    @patch('openshift_ai_auth.strategies.openshift.webbrowser.open')
-    @patch('openshift_ai_auth.strategies.openshift.HTTPServer')
+    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.post')
+    @patch('kube_authkit.strategies.openshift.webbrowser.open')
+    @patch('kube_authkit.strategies.openshift.HTTPServer')
     @patch('builtins.print')
     def test_authenticate_interactive_success(self, mock_print, mock_server_class, mock_browser, mock_post, mock_get):
         """Test successful interactive OAuth flow."""
@@ -380,8 +380,8 @@ class TestOpenShiftOAuthStrategyDescription:
 class TestOpenShiftOAuthInteractiveFlow:
     """Test interactive OAuth flow details."""
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
-    @patch('openshift_ai_auth.strategies.openshift.requests.post')
+    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.post')
     def test_interactive_flow_missing_endpoints(self, mock_post, mock_get):
         """Test interactive flow when endpoints are missing."""
         # Mock discovery without required endpoints
@@ -403,8 +403,8 @@ class TestOpenShiftOAuthInteractiveFlow:
 
         assert "not properly configured" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.openshift.requests.get')
-    @patch('openshift_ai_auth.strategies.openshift.requests.post')
+    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch('kube_authkit.strategies.openshift.requests.post')
     def test_interactive_flow_token_exchange_failure(self, mock_post, mock_get):
         """Test interactive flow when token exchange fails."""
         # Mock discovery

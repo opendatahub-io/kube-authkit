@@ -10,13 +10,13 @@ from pathlib import Path
 
 import pytest
 
-from openshift_ai_auth import AuthConfig, get_k8s_client
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import AuthenticationError, ConfigurationError
-from openshift_ai_auth.factory import AuthFactory
-from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
-from openshift_ai_auth.strategies.oidc import OIDCStrategy
-from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
+from kube_authkit import AuthConfig, get_k8s_client
+from kube_authkit.config import SecurityWarning
+from kube_authkit.exceptions import AuthenticationError, ConfigurationError
+from kube_authkit.factory import AuthFactory
+from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
+from kube_authkit.strategies.oidc import OIDCStrategy
+from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
 
 
 @pytest.mark.integration

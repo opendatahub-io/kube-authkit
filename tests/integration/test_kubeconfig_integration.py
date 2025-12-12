@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.exceptions import AuthenticationError
-from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
+from kube_authkit import AuthConfig
+from kube_authkit.exceptions import AuthenticationError
+from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
 
 
 @pytest.mark.integration
@@ -104,7 +104,7 @@ class TestKubeConfigIntegrationErrorHandling:
 
     def test_authenticate_with_nonexistent_file(self, tmp_path):
         """Test configuration validation catches nonexistent file."""
-        from openshift_ai_auth.exceptions import ConfigurationError
+        from kube_authkit.exceptions import ConfigurationError
 
         non_existent = tmp_path / "nonexistent" / "config"
 

@@ -13,13 +13,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import (
+from kube_authkit import AuthConfig
+from kube_authkit.config import SecurityWarning
+from kube_authkit.exceptions import (
     AuthenticationError,
     StrategyNotAvailableError,
 )
-from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
+from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
 
 
 class TestKubeConfigStrategyAvailability:
@@ -80,8 +80,8 @@ class TestKubeConfigStrategyAvailability:
 class TestKubeConfigStrategyAuthentication:
     """Test authentication flow for KubeConfig strategy."""
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('openshift_ai_auth.strategies.kubeconfig.client.ApiClient')
+    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
     def test_authenticate_success(self, mock_api_client, mock_load_config, mock_kubeconfig):
         """Test successful authentication."""
         # Setup mocks
@@ -98,8 +98,8 @@ class TestKubeConfigStrategyAuthentication:
         assert result == mock_client_instance
         mock_load_config.assert_called_once_with(config_file=str(mock_kubeconfig))
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('openshift_ai_auth.strategies.kubeconfig.client.ApiClient')
+    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
     def test_authenticate_with_custom_ca_cert(self, mock_api_client, mock_load_config, mock_kubeconfig, tmp_path):
         """Test authentication with custom CA certificate."""
         # Create a mock CA cert file
@@ -123,8 +123,8 @@ class TestKubeConfigStrategyAuthentication:
         # Verify CA cert was applied
         assert mock_client_instance.configuration.ssl_ca_cert == str(ca_cert_path)
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('openshift_ai_auth.strategies.kubeconfig.client.ApiClient')
+    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
     def test_authenticate_with_ssl_verification_disabled(self, mock_api_client, mock_load_config, mock_kubeconfig):
         """Test authentication with SSL verification disabled."""
         # Setup mocks
@@ -161,7 +161,7 @@ class TestKubeConfigStrategyAuthentication:
 
         assert "not available" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
     def test_authenticate_config_exception(self, mock_load_config, mock_kubeconfig):
         """Test authentication handles kubernetes ConfigException."""
         from kubernetes.config import ConfigException
@@ -177,7 +177,7 @@ class TestKubeConfigStrategyAuthentication:
 
         assert "Failed to load kubeconfig" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
     def test_authenticate_unexpected_exception(self, mock_load_config, mock_kubeconfig):
         """Test authentication handles unexpected exceptions."""
         # Make load_kube_config raise an unexpected exception
@@ -245,7 +245,7 @@ class TestKubeConfigStrategyPathResolution:
 
         # Patch the default path check to return our mock kubeconfig
 
-        with patch('openshift_ai_auth.strategies.kubeconfig.Path') as mock_path_class:
+        with patch('kube_authkit.strategies.kubeconfig.Path') as mock_path_class:
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = True
             mock_path_instance.__str__.return_value = str(mock_kubeconfig)

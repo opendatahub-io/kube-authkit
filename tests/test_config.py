@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from openshift_ai_auth.config import AuthConfig, SecurityWarning
-from openshift_ai_auth.exceptions import ConfigurationError
+from kube_authkit.config import AuthConfig, SecurityWarning
+from kube_authkit.exceptions import ConfigurationError
 
 
 class TestAuthConfigDefaults:

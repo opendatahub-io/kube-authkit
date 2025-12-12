@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "openshift-ai-auth"
+name = "kube-authkit"
 version = "0.1.0"
-description = "Thin authentication layer for OpenShift AI - unified KubeConfig, In-Cluster, OIDC, and OpenShift OAuth authentication"
+description = "Unified Kubernetes authentication toolkit - supports KubeConfig, In-Cluster, OIDC, and OpenShift OAuth authentication"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
 authors = [
-    {name = "OpenShift AI Team"}
+    {name = "Kube AuthKit Contributors"}
 ]
-keywords = ["openshift", "kubernetes", "authentication", "oidc", "oauth", "k8s"]
+keywords = ["kubernetes", "authentication", "oidc", "oauth", "k8s", "kubeconfig", "openshift"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -44,13 +44,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/openshift/openshift-ai-auth"
-Documentation = "https://github.com/openshift/openshift-ai-auth#readme"
-Repository = "https://github.com/openshift/openshift-ai-auth"
-Issues = "https://github.com/openshift/openshift-ai-auth/issues"
+Homepage = "https://github.com/kube-authkit/kube-authkit"
+Documentation = "https://github.com/kube-authkit/kube-authkit#readme"
+Repository = "https://github.com/kube-authkit/kube-authkit"
+Issues = "https://github.com/kube-authkit/kube-authkit/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/openshift_ai_auth"]
+packages = ["src/kube_authkit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -58,7 +58,7 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-    "--cov=openshift_ai_auth",
+    "--cov=kube_authkit",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-fail-under=70",

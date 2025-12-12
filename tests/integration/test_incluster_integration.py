@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.strategies.incluster import InClusterStrategy
+from kube_authkit import AuthConfig
+from kube_authkit.config import SecurityWarning
+from kube_authkit.strategies.incluster import InClusterStrategy
 
 
 @pytest.mark.integration

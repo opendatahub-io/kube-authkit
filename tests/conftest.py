@@ -95,9 +95,9 @@ test-certificate-data
     monkeypatch.setenv("KUBERNETES_SERVICE_PORT", "443")
 
     # Patch the hardcoded paths in InClusterStrategy to use our mock files
-    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.TOKEN_PATH", token_path)
-    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.CA_CERT_PATH", ca_path)
-    monkeypatch.setattr("openshift_ai_auth.strategies.incluster.NAMESPACE_PATH", namespace_path)
+    monkeypatch.setattr("kube_authkit.strategies.incluster.TOKEN_PATH", token_path)
+    monkeypatch.setattr("kube_authkit.strategies.incluster.CA_CERT_PATH", ca_path)
+    monkeypatch.setattr("kube_authkit.strategies.incluster.NAMESPACE_PATH", namespace_path)
 
     # Also patch the kubernetes library's hardcoded paths
     monkeypatch.setattr("kubernetes.config.incluster_config.SERVICE_TOKEN_FILENAME", str(token_path))

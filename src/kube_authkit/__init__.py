@@ -1,12 +1,12 @@
 """
-OpenShift AI Authentication Library.
+Kube AuthKit - Unified Kubernetes Authentication Toolkit.
 
-A lightweight Python library for unified authentication to OpenShift and
-Kubernetes clusters. Supports multiple authentication methods through a
+A lightweight Python library for unified authentication to Kubernetes and
+OpenShift clusters. Supports multiple authentication methods through a
 single, consistent interface.
 
 Quick Start:
-    >>> from openshift_ai_auth import get_k8s_client
+    >>> from kube_authkit import get_k8s_client
     >>> from kubernetes import client
     >>>
     >>> # Auto-detect and authenticate
@@ -15,7 +15,7 @@ Quick Start:
     >>> pods = v1.list_pod_for_all_namespaces()
 
 For more control:
-    >>> from openshift_ai_auth import get_k8s_client, AuthConfig
+    >>> from kube_authkit import get_k8s_client, AuthConfig
     >>>
     >>> config = AuthConfig(
     ...     method="oidc",
@@ -62,6 +62,6 @@ __all__ = [
 # Configure logging
 # Users can configure the logger in their own code:
 #   import logging
-#   logging.getLogger("openshift_ai_auth").setLevel(logging.DEBUG)
+#   logging.getLogger("kube_authkit").setLevel(logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())  # Avoid "No handler" warnings

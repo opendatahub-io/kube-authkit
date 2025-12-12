@@ -1,4 +1,4 @@
-# OpenShift AI Authentication Library
+# Kube AuthKit - Kubernetes Authentication Toolkit
 
 A lightweight Python library that provides unified authentication for OpenShift and Kubernetes clusters. This library simplifies authentication by supporting multiple methods through a single, consistent interface.
 
@@ -30,13 +30,13 @@ A lightweight Python library that provides unified authentication for OpenShift 
 ## Installation
 
 ```bash
-pip install openshift-ai-auth
+pip install kube-authkit
 ```
 
 For optional keyring support (persistent token storage):
 
 ```bash
-pip install openshift-ai-auth[keyring]
+pip install kube-authkit[keyring]
 ```
 
 ## Quick Start
@@ -46,7 +46,7 @@ pip install openshift-ai-auth[keyring]
 The library automatically detects your environment and chooses the appropriate authentication method:
 
 ```python
-from openshift_ai_auth import get_k8s_client
+from kube_authkit import get_k8s_client
 from kubernetes import client
 
 # Auto-detect environment and authenticate
@@ -68,7 +68,7 @@ This works seamlessly whether you're running:
 For CLI tools or when you need explicit control:
 
 ```python
-from openshift_ai_auth import get_k8s_client, AuthConfig
+from kube_authkit import get_k8s_client, AuthConfig
 
 config = AuthConfig(
     method="oidc",
@@ -86,7 +86,7 @@ api_client = get_k8s_client(config)
 For notebooks or interactive applications:
 
 ```python
-from openshift_ai_auth import get_k8s_client, AuthConfig
+from kube_authkit import get_k8s_client, AuthConfig
 
 config = AuthConfig(
     method="oidc",
@@ -104,7 +104,7 @@ api_client = get_k8s_client(config)
 Store refresh tokens securely in your system keyring:
 
 ```python
-from openshift_ai_auth import get_k8s_client, AuthConfig
+from kube_authkit import get_k8s_client, AuthConfig
 
 config = AuthConfig(
     method="oidc",
@@ -173,8 +173,8 @@ Each strategy implements the same interface, making it easy to add new authentic
 
 ```bash
 # Clone repository
-git clone https://github.com/openshift/openshift-ai-auth.git
-cd openshift-ai-auth
+git clone https://github.com/openshift/kube-authkit.git
+cd kube-authkit
 
 # Create virtual environment
 python -m venv venv
@@ -197,7 +197,7 @@ pytest tests/test_config.py
 pytest -v
 
 # Type checking
-mypy src/openshift_ai_auth
+mypy src/kube_authkit
 
 # Code formatting
 black src/ tests/
@@ -228,8 +228,8 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 
 ## Support
 
-- Issues: https://github.com/openshift/openshift-ai-auth/issues
-- Documentation: https://github.com/openshift/openshift-ai-auth#readme
+- Issues: https://github.com/openshift/kube-authkit/issues
+- Documentation: https://github.com/openshift/kube-authkit#readme
 
 ## Acknowledgments
 

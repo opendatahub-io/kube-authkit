@@ -1,1 +1,1 @@
-"""Tests for openshift_ai_auth library."""
+"""Tests for kube_authkit library."""

@@ -14,13 +14,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.exceptions import (
+from kube_authkit import AuthConfig
+from kube_authkit.exceptions import (
     AuthenticationError,
     ConfigurationError,
     StrategyNotAvailableError,
 )
-from openshift_ai_auth.strategies.oidc import OIDCStrategy
+from kube_authkit.strategies.oidc import OIDCStrategy
 
 # Mock OIDC discovery document
 MOCK_OIDC_CONFIG = {
@@ -37,7 +37,7 @@ MOCK_OIDC_CONFIG = {
 class TestOIDCStrategyAvailability:
     """Test availability detection for OIDC strategy."""
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_is_available_with_valid_config(self, mock_get):
         """Test availability with valid OIDC configuration."""
         # Mock discovery response
@@ -86,7 +86,7 @@ class TestOIDCStrategyAvailability:
 
         assert strategy.is_available() is False
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_is_not_available_discovery_fails(self, mock_get):
         """Test unavailability when discovery fails."""
         # Mock discovery failure
@@ -105,7 +105,7 @@ class TestOIDCStrategyAvailability:
 class TestOIDCDiscovery:
     """Test OIDC discovery functionality."""
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_discover_oidc_config_success(self, mock_get):
         """Test successful OIDC discovery."""
         # Mock discovery response
@@ -126,7 +126,7 @@ class TestOIDCDiscovery:
         assert result == MOCK_OIDC_CONFIG
         assert result["authorization_endpoint"] == MOCK_OIDC_CONFIG["authorization_endpoint"]
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_discover_oidc_config_cached(self, mock_get):
         """Test that discovery result is cached."""
         # Mock discovery response
@@ -150,7 +150,7 @@ class TestOIDCDiscovery:
         assert mock_get.call_count == 1
         assert result1 == result2
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_discover_oidc_config_network_error(self, mock_get):
         """Test discovery handles network errors."""
         import requests
@@ -172,10 +172,10 @@ class TestOIDCDiscovery:
 class TestOIDCDeviceCodeFlow:
     """Test Device Code Flow authentication."""
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_success(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test successful Device Code Flow authentication."""
         # Mock discovery
@@ -224,8 +224,8 @@ class TestOIDCDeviceCodeFlow:
         assert strategy._refresh_token == "test-refresh-token"
         assert strategy._token_expiry is not None
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_device_flow_not_supported(self, mock_post, mock_get):
         """Test Device Code Flow when not supported by provider."""
         # Mock discovery without device endpoint
@@ -250,10 +250,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "Device Code Flow not supported" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_expired(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow when code expires."""
         # Mock discovery
@@ -295,10 +295,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "expired_token" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_slow_down(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow slow_down error handling."""
         # Mock discovery
@@ -345,10 +345,10 @@ class TestOIDCDeviceCodeFlow:
         # Verify it handled slow_down and succeeded
         assert strategy._access_token == "test-token"
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_unknown_error(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow with unknown error."""
         # Mock discovery
@@ -390,10 +390,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "unknown_error" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_polling_network_error(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow when polling fails with network error."""
         import requests
@@ -434,10 +434,10 @@ class TestOIDCDeviceCodeFlow:
 class TestOIDCAuthorizationCodeFlow:
     """Test Authorization Code Flow with PKCE."""
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
-    @patch('openshift_ai_auth.strategies.oidc.webbrowser.open')
-    @patch('openshift_ai_auth.strategies.oidc.HTTPServer')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.webbrowser.open')
+    @patch('kube_authkit.strategies.oidc.HTTPServer')
     @patch('builtins.print')
     def test_auth_code_flow_success(self, mock_print, mock_server_class, mock_browser, mock_post, mock_get):
         """Test successful Authorization Code Flow."""
@@ -488,7 +488,7 @@ class TestOIDCAuthorizationCodeFlow:
 
             strategy._authenticate_auth_code_flow()
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_auth_code_flow_missing_endpoints(self, mock_get):
         """Test Authorization Code Flow when endpoints are missing."""
         # Mock discovery without required endpoints
@@ -516,8 +516,8 @@ class TestOIDCAuthorizationCodeFlow:
 class TestOIDCTokenRefresh:
     """Test token refresh functionality."""
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_refresh_access_token_error_invalid_json(self, mock_post, mock_get):
         """Test refresh token when error response has invalid JSON."""
         import requests
@@ -547,8 +547,8 @@ class TestOIDCTokenRefresh:
 
         assert "Failed to refresh access token" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_refresh_access_token_success(self, mock_post, mock_get):
         """Test successful token refresh."""
         # Mock discovery
@@ -580,8 +580,8 @@ class TestOIDCTokenRefresh:
         assert strategy._refresh_token == "new-refresh-token"
         assert strategy._token_expiry is not None
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_refresh_access_token_with_client_secret(self, mock_post, mock_get):
         """Test token refresh with client_secret."""
         # Mock discovery
@@ -615,7 +615,7 @@ class TestOIDCTokenRefresh:
         assert call_data['client_secret'] == 'test-secret'
         assert strategy._access_token == "new-access-token"
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.get')
     def test_refresh_access_token_no_token_endpoint(self, mock_get):
         """Test token refresh when OIDC config missing token_endpoint."""
         # Mock discovery without token_endpoint
@@ -639,8 +639,8 @@ class TestOIDCTokenRefresh:
 
         assert "Token refresh not supported" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_refresh_access_token_failure(self, mock_post, mock_get):
         """Test token refresh failure."""
         # Mock discovery
@@ -957,8 +957,8 @@ class TestOIDCAuthenticate:
         mock_create_client.assert_called_once()
         assert result == mock_api_client
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     def test_device_flow_request_error(self, mock_post, mock_get):
         """Test Device Code Flow when device authorization request fails."""
         import requests
@@ -985,10 +985,10 @@ class TestOIDCAuthenticate:
 
         assert "Failed to request device code" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.oidc.requests.get')
-    @patch('openshift_ai_auth.strategies.oidc.requests.post')
+    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch('kube_authkit.strategies.oidc.requests.post')
     @patch('builtins.print')
-    @patch('openshift_ai_auth.strategies.oidc.time.sleep')
+    @patch('kube_authkit.strategies.oidc.time.sleep')
     def test_device_flow_with_client_secret(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow with client_secret."""
         # Mock discovery

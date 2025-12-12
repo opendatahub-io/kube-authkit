@@ -13,13 +13,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import (
+from kube_authkit import AuthConfig
+from kube_authkit.config import SecurityWarning
+from kube_authkit.exceptions import (
     AuthenticationError,
     StrategyNotAvailableError,
 )
-from openshift_ai_auth.strategies.incluster import InClusterStrategy
+from kube_authkit.strategies.incluster import InClusterStrategy
 
 
 class TestInClusterStrategyAvailability:
@@ -32,8 +32,8 @@ class TestInClusterStrategyAvailability:
 
         # The mock_service_account fixture sets up the environment properly
         # but uses a temp path. We need to patch the constants.
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', mock_service_account / "token"):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', mock_service_account / "ca.crt"):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', mock_service_account / "token"):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', mock_service_account / "ca.crt"):
                 assert strategy.is_available() is True
 
     def test_is_not_available_missing_env_var(self, mock_service_account, monkeypatch):
@@ -43,8 +43,8 @@ class TestInClusterStrategyAvailability:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', mock_service_account / "token"):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', mock_service_account / "ca.crt"):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', mock_service_account / "token"):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', mock_service_account / "ca.crt"):
                 assert strategy.is_available() is False
 
     def test_is_not_available_missing_token(self, monkeypatch):
@@ -55,8 +55,8 @@ class TestInClusterStrategyAvailability:
         strategy = InClusterStrategy(config)
 
         # Use non-existent paths
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', Path("/nonexistent/token")):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', Path("/nonexistent/ca.crt")):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', Path("/nonexistent/token")):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', Path("/nonexistent/ca.crt")):
                 assert strategy.is_available() is False
 
     def test_is_not_available_missing_ca_cert(self, tmp_path, monkeypatch):
@@ -70,8 +70,8 @@ class TestInClusterStrategyAvailability:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', token_path):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', Path("/nonexistent/ca.crt")):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', token_path):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', Path("/nonexistent/ca.crt")):
                 assert strategy.is_available() is False
 
     def test_is_not_available_unreadable_token(self, mock_service_account, monkeypatch):
@@ -87,8 +87,8 @@ class TestInClusterStrategyAvailability:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', token_path):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', ca_path):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', token_path):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', ca_path):
                 is_avail = strategy.is_available()
 
         # Restore permissions for cleanup
@@ -109,8 +109,8 @@ class TestInClusterStrategyAvailability:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.TOKEN_PATH', token_path):
-            with patch('openshift_ai_auth.strategies.incluster.CA_CERT_PATH', ca_path):
+        with patch('kube_authkit.strategies.incluster.TOKEN_PATH', token_path):
+            with patch('kube_authkit.strategies.incluster.CA_CERT_PATH', ca_path):
                 is_avail = strategy.is_available()
 
         # Restore permissions for cleanup
@@ -122,8 +122,8 @@ class TestInClusterStrategyAvailability:
 class TestInClusterStrategyAuthentication:
     """Test authentication flow for InCluster strategy."""
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
-    @patch('openshift_ai_auth.strategies.incluster.client.ApiClient')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.client.ApiClient')
     def test_authenticate_success(self, mock_api_client, mock_load_config, mock_service_account):
         """Test successful authentication."""
         # Setup mocks
@@ -141,8 +141,8 @@ class TestInClusterStrategyAuthentication:
         assert result == mock_client_instance
         mock_load_config.assert_called_once()
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
-    @patch('openshift_ai_auth.strategies.incluster.client.ApiClient')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.client.ApiClient')
     def test_authenticate_with_custom_ca_cert(self, mock_api_client, mock_load_config, mock_service_account, tmp_path):
         """Test authentication with custom CA certificate."""
         # Create a mock CA cert file
@@ -163,8 +163,8 @@ class TestInClusterStrategyAuthentication:
         # Verify CA cert was applied
         assert mock_client_instance.configuration.ssl_ca_cert == str(ca_cert_path)
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
-    @patch('openshift_ai_auth.strategies.incluster.client.ApiClient')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.client.ApiClient')
     def test_authenticate_with_ssl_verification_disabled(self, mock_api_client, mock_load_config, mock_service_account):
         """Test authentication with SSL verification disabled."""
         # Setup mocks
@@ -184,8 +184,8 @@ class TestInClusterStrategyAuthentication:
         # Verify SSL verification was disabled
         assert mock_client_instance.configuration.verify_ssl is False
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
-    @patch('openshift_ai_auth.strategies.incluster.client.ApiClient')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.client.ApiClient')
     def test_authenticate_with_namespace(self, mock_api_client, mock_load_config, mock_service_account):
         """Test authentication logs namespace when available."""
         # Setup mocks
@@ -213,7 +213,7 @@ class TestInClusterStrategyAuthentication:
 
         assert "not available" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
     def test_authenticate_config_exception(self, mock_load_config, mock_service_account):
         """Test authentication handles kubernetes ConfigException."""
         from kubernetes.config import ConfigException
@@ -231,7 +231,7 @@ class TestInClusterStrategyAuthentication:
 
         assert "Failed to load in-cluster configuration" in str(exc_info.value)
 
-    @patch('openshift_ai_auth.strategies.incluster.k8s_config.load_incluster_config')
+    @patch('kube_authkit.strategies.incluster.k8s_config.load_incluster_config')
     def test_authenticate_unexpected_exception(self, mock_load_config, mock_service_account):
         """Test authentication handles unexpected exceptions."""
         # Make load_incluster_config raise an unexpected exception
@@ -258,7 +258,7 @@ class TestInClusterStrategyNamespace:
 
         namespace_path = mock_service_account / "namespace"
 
-        with patch('openshift_ai_auth.strategies.incluster.NAMESPACE_PATH', namespace_path):
+        with patch('kube_authkit.strategies.incluster.NAMESPACE_PATH', namespace_path):
             namespace = strategy._get_namespace()
 
         assert namespace == "default"
@@ -268,7 +268,7 @@ class TestInClusterStrategyNamespace:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.NAMESPACE_PATH', tmp_path / "nonexistent"):
+        with patch('kube_authkit.strategies.incluster.NAMESPACE_PATH', tmp_path / "nonexistent"):
             namespace = strategy._get_namespace()
 
         assert namespace is None
@@ -281,7 +281,7 @@ class TestInClusterStrategyNamespace:
         namespace_path = mock_service_account / "namespace"
         namespace_path.chmod(0o000)
 
-        with patch('openshift_ai_auth.strategies.incluster.NAMESPACE_PATH', namespace_path):
+        with patch('kube_authkit.strategies.incluster.NAMESPACE_PATH', namespace_path):
             namespace = strategy._get_namespace()
 
         # Restore permissions
@@ -300,7 +300,7 @@ class TestInClusterStrategyDescription:
 
         namespace_path = mock_service_account / "namespace"
 
-        with patch('openshift_ai_auth.strategies.incluster.NAMESPACE_PATH', namespace_path):
+        with patch('kube_authkit.strategies.incluster.NAMESPACE_PATH', namespace_path):
             description = strategy.get_description()
 
         assert "In-Cluster" in description
@@ -311,7 +311,7 @@ class TestInClusterStrategyDescription:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch('openshift_ai_auth.strategies.incluster.NAMESPACE_PATH', tmp_path / "nonexistent"):
+        with patch('kube_authkit.strategies.incluster.NAMESPACE_PATH', tmp_path / "nonexistent"):
             description = strategy.get_description()
 
         assert "In-Cluster" in description

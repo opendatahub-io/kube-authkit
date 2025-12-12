@@ -17,7 +17,7 @@ import secrets
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 
@@ -33,8 +33,8 @@ class MockOAuthServer:
         """
         self.host = host
         self.port = port
-        self.server: Optional[HTTPServer] = None
-        self.thread: Optional[threading.Thread] = None
+        self.server: HTTPServer | None = None
+        self.thread: threading.Thread | None = None
         self.base_url = f"http://{host}:{port}"
 
         # Storage for active flows

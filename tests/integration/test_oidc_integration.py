@@ -15,10 +15,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import AuthenticationError
-from openshift_ai_auth.strategies.oidc import OIDCStrategy
+from kube_authkit import AuthConfig
+from kube_authkit.config import SecurityWarning
+from kube_authkit.exceptions import AuthenticationError
+from kube_authkit.strategies.oidc import OIDCStrategy
 
 
 @pytest.mark.integration
@@ -48,7 +48,7 @@ class TestOIDCIntegrationAuthCodeFlow:
         # Mock the browser opening and callback handling
         with patch('webbrowser.open'):
             # Mock the callback server to simulate successful auth
-            with patch('openshift_ai_auth.strategies.oidc.HTTPServer') as mock_server:
+            with patch('kube_authkit.strategies.oidc.HTTPServer') as mock_server:
                 # Simulate auth code callback
                 MagicMock()
                 mock_server_instance = MagicMock()

@@ -8,8 +8,8 @@ Tests cover:
 
 import pytest
 
-from openshift_ai_auth import AuthConfig
-from openshift_ai_auth.strategies.base import AuthStrategy
+from kube_authkit import AuthConfig
+from kube_authkit.strategies.base import AuthStrategy
 
 
 class ConcreteStrategy(AuthStrategy):
