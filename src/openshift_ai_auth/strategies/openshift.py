@@ -20,7 +20,7 @@ import secrets
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
@@ -77,8 +77,8 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             config: AuthConfig instance with OpenShift parameters
         """
         super().__init__(config)
-        self._oauth_metadata: Optional[dict[str, Any]] = None
-        self._access_token: Optional[str] = None
+        self._oauth_metadata: dict[str, Any] | None = None
+        self._access_token: str | None = None
 
     def is_available(self) -> bool:
         """Check if OpenShift OAuth authentication is available.
@@ -391,7 +391,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         logger.info(f"Created ApiClient for {configuration.host}")
         return api_client
 
-    def _load_token(self) -> Optional[str]:
+    def _load_token(self) -> str | None:
         """Load token from system keyring.
 
         Returns:

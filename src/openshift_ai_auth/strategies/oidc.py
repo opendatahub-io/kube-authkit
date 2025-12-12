@@ -18,7 +18,7 @@ import threading
 import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
@@ -73,10 +73,10 @@ class OIDCStrategy(AuthStrategy):
             config: AuthConfig instance with OIDC parameters
         """
         super().__init__(config)
-        self._oidc_config: Optional[dict[str, Any]] = None
-        self._access_token: Optional[str] = None
-        self._refresh_token: Optional[str] = None
-        self._token_expiry: Optional[float] = None
+        self._oidc_config: dict[str, Any] | None = None
+        self._access_token: str | None = None
+        self._refresh_token: str | None = None
+        self._token_expiry: float | None = None
 
     def is_available(self) -> bool:
         """Check if OIDC authentication is available.
@@ -576,7 +576,7 @@ class OIDCStrategy(AuthStrategy):
         logger.info(f"Created ApiClient for {configuration.host}")
         return api_client
 
-    def _load_refresh_token(self) -> Optional[str]:
+    def _load_refresh_token(self) -> str | None:
         """Load refresh token from system keyring.
 
         Returns:

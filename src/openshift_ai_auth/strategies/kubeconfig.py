@@ -9,7 +9,6 @@ development and kubectl usage.
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 from kubernetes import client
 from kubernetes import config as k8s_config
@@ -119,7 +118,7 @@ class KubeConfigStrategy(AuthStrategy):
                 f"Error: {type(e).__name__}: {str(e)}"
             ) from e
 
-    def _get_kubeconfig_path(self) -> Optional[str]:
+    def _get_kubeconfig_path(self) -> str | None:
         """Determine the kubeconfig file path to use.
 
         Checks in order:
