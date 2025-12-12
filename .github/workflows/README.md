@@ -27,7 +27,7 @@ This directory contains CI/CD workflows for Kube AuthKit.
 
 **What it does**:
 - Runs tests on multiple Python versions (3.10, 3.11, 3.12)
-- Tests on multiple OS (Ubuntu, macOS, Windows)
+- Tests on multiple OS (Ubuntu, macOS)
 - Separates unit and integration tests
 - Generates coverage reports
 - Uploads coverage to Codecov
