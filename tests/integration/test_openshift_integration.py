@@ -5,14 +5,13 @@ These tests verify the OpenShift OAuth strategy works end-to-end with a mock
 OAuth server.
 """
 
-import os
 import warnings
 
 import pytest
 
 from openshift_ai_auth import AuthConfig
 from openshift_ai_auth.config import SecurityWarning
-from openshift_ai_auth.exceptions import AuthenticationError
+from openshift_ai_auth.exceptions import StrategyNotAvailableError
 from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy
 
 
@@ -175,7 +174,7 @@ class TestOpenShiftIntegrationErrorHandling:
 
         strategy = OpenShiftOAuthStrategy(config)
 
-        with pytest.raises(Exception):
+        with pytest.raises(StrategyNotAvailableError):
             # Should fail because strategy is not available
             strategy.authenticate()
 

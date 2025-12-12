@@ -5,10 +5,8 @@ These tests verify the factory can properly detect and select authentication
 strategies based on the environment.
 """
 
-import os
 import warnings
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -16,7 +14,6 @@ from openshift_ai_auth import AuthConfig, get_k8s_client
 from openshift_ai_auth.config import SecurityWarning
 from openshift_ai_auth.exceptions import AuthenticationError, ConfigurationError
 from openshift_ai_auth.factory import AuthFactory
-from openshift_ai_auth.strategies.incluster import InClusterStrategy
 from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
 from openshift_ai_auth.strategies.oidc import OIDCStrategy
 from openshift_ai_auth.strategies.openshift import OpenShiftOAuthStrategy

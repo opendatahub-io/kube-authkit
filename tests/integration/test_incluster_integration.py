@@ -5,7 +5,6 @@ These tests verify the InCluster strategy works end-to-end with mock
 service account files.
 """
 
-import os
 import warnings
 from pathlib import Path
 

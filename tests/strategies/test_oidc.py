@@ -727,7 +727,6 @@ class TestOIDCKeyringIntegration:
 
     def test_load_refresh_token_success_with_keyring(self):
         """Test successfully loading refresh token from keyring."""
-        import sys
         mock_keyring = Mock()
         mock_keyring.get_password.return_value = "stored-token"
 
@@ -747,7 +746,6 @@ class TestOIDCKeyringIntegration:
 
     def test_save_refresh_token_success_with_keyring(self):
         """Test successfully saving refresh token to keyring."""
-        import sys
         mock_keyring = Mock()
 
         with patch.dict('sys.modules', {'keyring': mock_keyring}):
@@ -766,7 +764,6 @@ class TestOIDCKeyringIntegration:
 
     def test_load_refresh_token_exception(self):
         """Test loading refresh token when keyring raises exception."""
-        import sys
         mock_keyring = Mock()
         mock_keyring.get_password.side_effect = Exception("Keyring error")
 
@@ -786,7 +783,6 @@ class TestOIDCKeyringIntegration:
 
     def test_save_refresh_token_exception(self):
         """Test saving refresh token when keyring raises exception."""
-        import sys
         mock_keyring = Mock()
         mock_keyring.set_password.side_effect = Exception("Keyring error")
 

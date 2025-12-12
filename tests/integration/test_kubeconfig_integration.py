@@ -5,12 +5,12 @@ These tests verify the KubeConfig strategy works end-to-end with real
 kubeconfig files.
 """
 
-import os
 from pathlib import Path
 
 import pytest
 
 from openshift_ai_auth import AuthConfig
+from openshift_ai_auth.exceptions import AuthenticationError
 from openshift_ai_auth.strategies.kubeconfig import KubeConfigStrategy
 
 
@@ -123,7 +123,7 @@ class TestKubeConfigIntegrationErrorHandling:
         strategy = KubeConfigStrategy(config)
 
         # May still be "available" (file exists) but authenticate should fail
-        with pytest.raises(Exception):
+        with pytest.raises(AuthenticationError):
             strategy.authenticate()
 
     def test_description(self, mock_kubeconfig):
