@@ -70,9 +70,8 @@ jobs:
     if: github.event_name == 'release' && !inputs.publish_to_test_pypi
     needs: [build, test]
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/kube-authkit
+    # Environment removed - not required for Trusted Publishing
+    # Only needed for manual approval gates
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v4
@@ -86,24 +85,3 @@ jobs:
           # Uses PyPI Trusted Publishing - no API token needed!
           # Configure at: https://pypi.org/manage/account/publishing/
 
-  publish-to-test-pypi:
-    name: Publish to TestPyPI
-    if: inputs.publish_to_test_pypi || github.event_name == 'workflow_dispatch'
-    needs: [build, test]
-    runs-on: ubuntu-latest
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/kube-authkit
-    steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-
-      - name: Publish distribution to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          # Uses TestPyPI Trusted Publishing
-          # Configure at: https://test.pypi.org/manage/account/publishing/
