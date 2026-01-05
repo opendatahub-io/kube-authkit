@@ -3,13 +3,6 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      publish_to_test_pypi:
-        description: 'Publish to Test PyPI instead of production PyPI'
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -67,7 +60,7 @@ jobs:
 
   publish-to-pypi:
     name: Publish to PyPI
-    if: github.event_name == 'release' && !inputs.publish_to_test_pypi
+    if: github.event_name == 'release'
     needs: [build, test]
     runs-on: ubuntu-latest
     # Environment removed - not required for Trusted Publishing
@@ -81,7 +74,3 @@ jobs:
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # Uses PyPI Trusted Publishing - no API token needed!
-          # Configure at: https://pypi.org/manage/account/publishing/
-
