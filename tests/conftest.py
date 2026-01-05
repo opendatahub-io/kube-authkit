@@ -100,7 +100,9 @@ test-certificate-data
     monkeypatch.setattr("kube_authkit.strategies.incluster.NAMESPACE_PATH", namespace_path)
 
     # Also patch the kubernetes library's hardcoded paths
-    monkeypatch.setattr("kubernetes.config.incluster_config.SERVICE_TOKEN_FILENAME", str(token_path))
+    monkeypatch.setattr(
+        "kubernetes.config.incluster_config.SERVICE_TOKEN_FILENAME", str(token_path)
+    )
     monkeypatch.setattr("kubernetes.config.incluster_config.SERVICE_CERT_FILENAME", str(ca_path))
 
     return sa_path
@@ -155,6 +157,7 @@ def mock_oidc_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 # Integration testing fixtures
+
 
 @pytest.fixture(scope="session")
 def mock_oauth_server():
@@ -215,15 +218,7 @@ def oauth_config(mock_oauth_server):
 # Pytest markers for different test levels
 def pytest_configure(config):
     """Register custom pytest markers."""
-    config.addinivalue_line(
-        "markers", "unit: Unit tests that don't require external services"
-    )
-    config.addinivalue_line(
-        "markers", "integration: Integration tests that use mock servers"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: End-to-end tests that require real external services"
-    )
-    config.addinivalue_line(
-        "markers", "slow: Tests that take longer to run"
-    )
+    config.addinivalue_line("markers", "unit: Unit tests that don't require external services")
+    config.addinivalue_line("markers", "integration: Integration tests that use mock servers")
+    config.addinivalue_line("markers", "e2e: End-to-end tests that require real external services")
+    config.addinivalue_line("markers", "slow: Tests that take longer to run")

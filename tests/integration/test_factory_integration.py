@@ -42,9 +42,7 @@ class TestFactoryIntegrationAutoDetection:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", SecurityWarning)
             config = AuthConfig(
-                method="auto",
-                k8s_api_host="https://test-k8s.example.com:6443",
-                verify_ssl=False
+                method="auto", k8s_api_host="https://test-k8s.example.com:6443", verify_ssl=False
             )
 
         factory = AuthFactory(config)
@@ -115,7 +113,9 @@ class TestFactoryIntegrationGetK8sClient:
 class TestFactoryIntegrationStrategySelection:
     """Integration tests for strategy selection logic."""
 
-    def test_factory_creates_all_strategy_types(self, mock_kubeconfig, mock_oauth_server, mock_env_vars):
+    def test_factory_creates_all_strategy_types(
+        self, mock_kubeconfig, mock_oauth_server, mock_env_vars
+    ):
         """Test factory can create all strategy types."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", SecurityWarning)
@@ -131,7 +131,7 @@ class TestFactoryIntegrationStrategySelection:
                 method="oidc",
                 oidc_issuer=mock_oauth_server.base_url,
                 client_id="test-client",
-                verify_ssl=False
+                verify_ssl=False,
             )
             factory2 = AuthFactory(config2)
             strategy2 = factory2.get_strategy()
@@ -139,9 +139,7 @@ class TestFactoryIntegrationStrategySelection:
 
             # Test OpenShift (note: will fail is_available() but should create)
             config3 = AuthConfig(
-                method="openshift",
-                k8s_api_host=mock_oauth_server.base_url,
-                verify_ssl=False
+                method="openshift", k8s_api_host=mock_oauth_server.base_url, verify_ssl=False
             )
             factory3 = AuthFactory(config3)
             strategy3 = factory3.get_strategy()

@@ -37,7 +37,7 @@ MOCK_OIDC_CONFIG = {
 class TestOIDCStrategyAvailability:
     """Test availability detection for OIDC strategy."""
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_is_available_with_valid_config(self, mock_get):
         """Test availability with valid OIDC configuration."""
         # Mock discovery response
@@ -49,7 +49,7 @@ class TestOIDCStrategyAvailability:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -62,7 +62,7 @@ class TestOIDCStrategyAvailability:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://temp.example.com",  # Will be cleared after init
-            client_id="test-client"
+            client_id="test-client",
         )
         # Clear issuer after validation
         config.oidc_issuer = None
@@ -77,7 +77,7 @@ class TestOIDCStrategyAvailability:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="temp-client"  # Will be cleared after init
+            client_id="temp-client",  # Will be cleared after init
         )
         # Clear client_id after validation
         config.client_id = None
@@ -86,7 +86,7 @@ class TestOIDCStrategyAvailability:
 
         assert strategy.is_available() is False
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_is_not_available_discovery_fails(self, mock_get):
         """Test unavailability when discovery fails."""
         # Mock discovery failure
@@ -95,7 +95,7 @@ class TestOIDCStrategyAvailability:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -105,7 +105,7 @@ class TestOIDCStrategyAvailability:
 class TestOIDCDiscovery:
     """Test OIDC discovery functionality."""
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_discover_oidc_config_success(self, mock_get):
         """Test successful OIDC discovery."""
         # Mock discovery response
@@ -117,7 +117,7 @@ class TestOIDCDiscovery:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -126,7 +126,7 @@ class TestOIDCDiscovery:
         assert result == MOCK_OIDC_CONFIG
         assert result["authorization_endpoint"] == MOCK_OIDC_CONFIG["authorization_endpoint"]
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_discover_oidc_config_cached(self, mock_get):
         """Test that discovery result is cached."""
         # Mock discovery response
@@ -138,7 +138,7 @@ class TestOIDCDiscovery:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -150,16 +150,17 @@ class TestOIDCDiscovery:
         assert mock_get.call_count == 1
         assert result1 == result2
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_discover_oidc_config_network_error(self, mock_get):
         """Test discovery handles network errors."""
         import requests
+
         mock_get.side_effect = requests.RequestException("Network error")
 
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -172,10 +173,10 @@ class TestOIDCDiscovery:
 class TestOIDCDeviceCodeFlow:
     """Test Device Code Flow authentication."""
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_success(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test successful Device Code Flow authentication."""
         # Mock discovery
@@ -191,7 +192,7 @@ class TestOIDCDeviceCodeFlow:
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
             "verification_uri_complete": "https://example.com/device?code=ABCD-1234",
-            "interval": 1
+            "interval": 1,
         }
         device_response.raise_for_status.return_value = None
 
@@ -205,7 +206,7 @@ class TestOIDCDeviceCodeFlow:
         success_response.json.return_value = {
             "access_token": "test-access-token",
             "refresh_token": "test-refresh-token",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
 
         mock_post.side_effect = [device_response, pending_response, success_response]
@@ -214,7 +215,7 @@ class TestOIDCDeviceCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -224,8 +225,8 @@ class TestOIDCDeviceCodeFlow:
         assert strategy._refresh_token == "test-refresh-token"
         assert strategy._token_expiry is not None
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_device_flow_not_supported(self, mock_post, mock_get):
         """Test Device Code Flow when not supported by provider."""
         # Mock discovery without device endpoint
@@ -241,7 +242,7 @@ class TestOIDCDeviceCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -250,10 +251,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "Device Code Flow not supported" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_expired(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow when code expires."""
         # Mock discovery
@@ -268,7 +269,7 @@ class TestOIDCDeviceCodeFlow:
             "device_code": "test-device-code",
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
-            "interval": 1
+            "interval": 1,
         }
         device_response.raise_for_status.return_value = None
 
@@ -277,7 +278,7 @@ class TestOIDCDeviceCodeFlow:
         expired_response.status_code = 400
         expired_response.json.return_value = {
             "error": "expired_token",
-            "error_description": "The device code has expired"
+            "error_description": "The device code has expired",
         }
 
         mock_post.side_effect = [device_response, expired_response]
@@ -286,7 +287,7 @@ class TestOIDCDeviceCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -295,10 +296,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "expired_token" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_slow_down(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow slow_down error handling."""
         # Mock discovery
@@ -313,7 +314,7 @@ class TestOIDCDeviceCodeFlow:
             "device_code": "test-device-code",
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
-            "interval": 0.1
+            "interval": 0.1,
         }
         device_response.raise_for_status.return_value = None
 
@@ -327,7 +328,7 @@ class TestOIDCDeviceCodeFlow:
         success_response.json.return_value = {
             "access_token": "test-token",
             "refresh_token": "test-refresh",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
 
         mock_post.side_effect = [device_response, slow_down_response, success_response]
@@ -336,7 +337,7 @@ class TestOIDCDeviceCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -345,10 +346,10 @@ class TestOIDCDeviceCodeFlow:
         # Verify it handled slow_down and succeeded
         assert strategy._access_token == "test-token"
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_unknown_error(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow with unknown error."""
         # Mock discovery
@@ -363,7 +364,7 @@ class TestOIDCDeviceCodeFlow:
             "device_code": "test-device-code",
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
-            "interval": 0.1
+            "interval": 0.1,
         }
         device_response.raise_for_status.return_value = None
 
@@ -372,7 +373,7 @@ class TestOIDCDeviceCodeFlow:
         error_response.status_code = 400
         error_response.json.return_value = {
             "error": "unknown_error",
-            "error_description": "Something went wrong"
+            "error_description": "Something went wrong",
         }
 
         mock_post.side_effect = [device_response, error_response]
@@ -381,7 +382,7 @@ class TestOIDCDeviceCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -390,10 +391,10 @@ class TestOIDCDeviceCodeFlow:
 
         assert "unknown_error" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_polling_network_error(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow when polling fails with network error."""
         import requests
@@ -410,18 +411,21 @@ class TestOIDCDeviceCodeFlow:
             "device_code": "test-device-code",
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
-            "interval": 0.1
+            "interval": 0.1,
         }
         device_response.raise_for_status.return_value = None
 
         # Mock token polling - network error
-        mock_post.side_effect = [device_response, requests.RequestException("Network error during polling")]
+        mock_post.side_effect = [
+            device_response,
+            requests.RequestException("Network error during polling"),
+        ]
 
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -434,12 +438,14 @@ class TestOIDCDeviceCodeFlow:
 class TestOIDCAuthorizationCodeFlow:
     """Test Authorization Code Flow with PKCE."""
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('kube_authkit.strategies.oidc.webbrowser.open')
-    @patch('kube_authkit.strategies.oidc.HTTPServer')
-    @patch('builtins.print')
-    def test_auth_code_flow_success(self, mock_print, mock_server_class, mock_browser, mock_post, mock_get):
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("kube_authkit.strategies.oidc.webbrowser.open")
+    @patch("kube_authkit.strategies.oidc.HTTPServer")
+    @patch("builtins.print")
+    def test_auth_code_flow_success(
+        self, mock_print, mock_server_class, mock_browser, mock_post, mock_get
+    ):
         """Test successful Authorization Code Flow."""
         # Mock discovery
         mock_get_response = Mock()
@@ -464,7 +470,7 @@ class TestOIDCAuthorizationCodeFlow:
         token_response.json.return_value = {
             "access_token": "test-access-token",
             "refresh_token": "test-refresh-token",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
         token_response.raise_for_status.return_value = None
         mock_post.return_value = token_response
@@ -473,12 +479,12 @@ class TestOIDCAuthorizationCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=False
+            use_device_flow=False,
         )
         strategy = OIDCStrategy(config)
 
         # Manually inject auth code (simulating callback)
-        with patch.object(strategy, '_authenticate_auth_code_flow') as mock_auth:
+        with patch.object(strategy, "_authenticate_auth_code_flow") as mock_auth:
             # Simulate successful authentication
             strategy._access_token = "test-access-token"
             strategy._refresh_token = "test-refresh-token"
@@ -488,7 +494,7 @@ class TestOIDCAuthorizationCodeFlow:
 
             strategy._authenticate_auth_code_flow()
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_auth_code_flow_missing_endpoints(self, mock_get):
         """Test Authorization Code Flow when endpoints are missing."""
         # Mock discovery without required endpoints
@@ -503,7 +509,7 @@ class TestOIDCAuthorizationCodeFlow:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=False
+            use_device_flow=False,
         )
         strategy = OIDCStrategy(config)
 
@@ -516,8 +522,8 @@ class TestOIDCAuthorizationCodeFlow:
 class TestOIDCTokenRefresh:
     """Test token refresh functionality."""
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_refresh_access_token_error_invalid_json(self, mock_post, mock_get):
         """Test refresh token when error response has invalid JSON."""
         import requests
@@ -538,7 +544,7 @@ class TestOIDCTokenRefresh:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -547,8 +553,8 @@ class TestOIDCTokenRefresh:
 
         assert "Failed to refresh access token" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_refresh_access_token_success(self, mock_post, mock_get):
         """Test successful token refresh."""
         # Mock discovery
@@ -562,7 +568,7 @@ class TestOIDCTokenRefresh:
         refresh_response.json.return_value = {
             "access_token": "new-access-token",
             "refresh_token": "new-refresh-token",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
         refresh_response.raise_for_status.return_value = None
         mock_post.return_value = refresh_response
@@ -570,7 +576,7 @@ class TestOIDCTokenRefresh:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -580,8 +586,8 @@ class TestOIDCTokenRefresh:
         assert strategy._refresh_token == "new-refresh-token"
         assert strategy._token_expiry is not None
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_refresh_access_token_with_client_secret(self, mock_post, mock_get):
         """Test token refresh with client_secret."""
         # Mock discovery
@@ -595,7 +601,7 @@ class TestOIDCTokenRefresh:
         mock_post_response.json.return_value = {
             "access_token": "new-access-token",
             "refresh_token": "new-refresh-token",
-            "expires_in": 7200
+            "expires_in": 7200,
         }
         mock_post_response.raise_for_status.return_value = None
         mock_post.return_value = mock_post_response
@@ -604,18 +610,18 @@ class TestOIDCTokenRefresh:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            client_secret="test-secret"
+            client_secret="test-secret",
         )
         strategy = OIDCStrategy(config)
 
         strategy._refresh_access_token("old-refresh-token")
 
         # Verify client_secret was included in request
-        call_data = mock_post.call_args[1]['data']
-        assert call_data['client_secret'] == 'test-secret'
+        call_data = mock_post.call_args[1]["data"]
+        assert call_data["client_secret"] == "test-secret"
         assert strategy._access_token == "new-access-token"
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
+    @patch("kube_authkit.strategies.oidc.requests.get")
     def test_refresh_access_token_no_token_endpoint(self, mock_get):
         """Test token refresh when OIDC config missing token_endpoint."""
         # Mock discovery without token_endpoint
@@ -630,7 +636,7 @@ class TestOIDCTokenRefresh:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -639,8 +645,8 @@ class TestOIDCTokenRefresh:
 
         assert "Token refresh not supported" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_refresh_access_token_failure(self, mock_post, mock_get):
         """Test token refresh failure."""
         # Mock discovery
@@ -651,12 +657,13 @@ class TestOIDCTokenRefresh:
 
         # Mock token refresh failure
         import requests
+
         mock_post.side_effect = requests.RequestException("Invalid refresh token")
 
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
@@ -675,7 +682,7 @@ class TestOIDCKeyringIntegration:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -688,7 +695,7 @@ class TestOIDCKeyringIntegration:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -704,7 +711,7 @@ class TestOIDCKeyringIntegration:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_keyring=False
+            use_keyring=False,
         )
         strategy = OIDCStrategy(config)
 
@@ -717,7 +724,7 @@ class TestOIDCKeyringIntegration:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_keyring=False
+            use_keyring=False,
         )
         strategy = OIDCStrategy(config)
 
@@ -730,12 +737,12 @@ class TestOIDCKeyringIntegration:
         mock_keyring = Mock()
         mock_keyring.get_password.return_value = "stored-token"
 
-        with patch.dict('sys.modules', {'keyring': mock_keyring}):
+        with patch.dict("sys.modules", {"keyring": mock_keyring}):
             config = AuthConfig(
                 method="oidc",
                 oidc_issuer="https://keycloak.example.com/auth/realms/test",
                 client_id="test-client",
-                use_keyring=True
+                use_keyring=True,
             )
             strategy = OIDCStrategy(config)
 
@@ -748,12 +755,12 @@ class TestOIDCKeyringIntegration:
         """Test successfully saving refresh token to keyring."""
         mock_keyring = Mock()
 
-        with patch.dict('sys.modules', {'keyring': mock_keyring}):
+        with patch.dict("sys.modules", {"keyring": mock_keyring}):
             config = AuthConfig(
                 method="oidc",
                 oidc_issuer="https://keycloak.example.com/auth/realms/test",
                 client_id="test-client",
-                use_keyring=True
+                use_keyring=True,
             )
             strategy = OIDCStrategy(config)
 
@@ -767,12 +774,12 @@ class TestOIDCKeyringIntegration:
         mock_keyring = Mock()
         mock_keyring.get_password.side_effect = Exception("Keyring error")
 
-        with patch.dict('sys.modules', {'keyring': mock_keyring}):
+        with patch.dict("sys.modules", {"keyring": mock_keyring}):
             config = AuthConfig(
                 method="oidc",
                 oidc_issuer="https://keycloak.example.com/auth/realms/test",
                 client_id="test-client",
-                use_keyring=True
+                use_keyring=True,
             )
             strategy = OIDCStrategy(config)
 
@@ -786,12 +793,12 @@ class TestOIDCKeyringIntegration:
         mock_keyring = Mock()
         mock_keyring.set_password.side_effect = Exception("Keyring error")
 
-        with patch.dict('sys.modules', {'keyring': mock_keyring}):
+        with patch.dict("sys.modules", {"keyring": mock_keyring}):
             config = AuthConfig(
                 method="oidc",
                 oidc_issuer="https://keycloak.example.com/auth/realms/test",
                 client_id="test-client",
-                use_keyring=True
+                use_keyring=True,
             )
             strategy = OIDCStrategy(config)
 
@@ -808,7 +815,7 @@ class TestOIDCApiClientCreation:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
         strategy._access_token = "test-access-token"
@@ -817,14 +824,16 @@ class TestOIDCApiClientCreation:
 
         assert api_client is not None
         assert api_client.configuration.host == "https://api.example.com:6443"
-        assert "Bearer test-access-token" in str(api_client.configuration.api_key.get("authorization", ""))
+        assert "Bearer test-access-token" in str(
+            api_client.configuration.api_key.get("authorization", "")
+        )
 
     def test_create_api_client_missing_host(self):
         """Test creating ApiClient without k8s_api_host raises error."""
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
         strategy._access_token = "test-access-token"
@@ -844,7 +853,7 @@ class TestOIDCApiClientCreation:
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
             k8s_api_host="https://api.example.com:6443",
-            ca_cert=str(ca_cert)
+            ca_cert=str(ca_cert),
         )
         strategy = OIDCStrategy(config)
         strategy._access_token = "test-access-token"
@@ -863,7 +872,7 @@ class TestOIDCStrategyDescription:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -879,7 +888,7 @@ class TestOIDCStrategyDescription:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=False
+            use_device_flow=False,
         )
         strategy = OIDCStrategy(config)
 
@@ -898,21 +907,23 @@ class TestOIDCAuthenticate:
         config = AuthConfig(
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
-            client_id="test-client"
+            client_id="test-client",
         )
         strategy = OIDCStrategy(config)
 
         # Mock is_available to return False
-        with patch.object(strategy, 'is_available', return_value=False):
+        with patch.object(strategy, "is_available", return_value=False):
             with pytest.raises(StrategyNotAvailableError) as exc_info:
                 strategy.authenticate()
 
         assert "not available" in str(exc_info.value)
 
-    @patch.object(OIDCStrategy, 'is_available')
-    @patch.object(OIDCStrategy, '_authenticate_device_flow')
-    @patch.object(OIDCStrategy, '_create_api_client')
-    def test_authenticate_device_flow(self, mock_create_client, mock_device_flow, mock_is_available):
+    @patch.object(OIDCStrategy, "is_available")
+    @patch.object(OIDCStrategy, "_authenticate_device_flow")
+    @patch.object(OIDCStrategy, "_create_api_client")
+    def test_authenticate_device_flow(
+        self, mock_create_client, mock_device_flow, mock_is_available
+    ):
         """Test authenticate uses Device Code Flow when configured."""
         mock_is_available.return_value = True
         mock_api_client = Mock()
@@ -923,7 +934,7 @@ class TestOIDCAuthenticate:
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
             use_device_flow=True,
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
 
@@ -933,10 +944,12 @@ class TestOIDCAuthenticate:
         mock_create_client.assert_called_once()
         assert result == mock_api_client
 
-    @patch.object(OIDCStrategy, 'is_available')
-    @patch.object(OIDCStrategy, '_authenticate_auth_code_flow')
-    @patch.object(OIDCStrategy, '_create_api_client')
-    def test_authenticate_auth_code_flow(self, mock_create_client, mock_auth_code_flow, mock_is_available):
+    @patch.object(OIDCStrategy, "is_available")
+    @patch.object(OIDCStrategy, "_authenticate_auth_code_flow")
+    @patch.object(OIDCStrategy, "_create_api_client")
+    def test_authenticate_auth_code_flow(
+        self, mock_create_client, mock_auth_code_flow, mock_is_available
+    ):
         """Test authenticate uses Authorization Code Flow when configured."""
         mock_is_available.return_value = True
         mock_api_client = Mock()
@@ -947,7 +960,7 @@ class TestOIDCAuthenticate:
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
             use_device_flow=False,
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
 
@@ -957,8 +970,8 @@ class TestOIDCAuthenticate:
         mock_create_client.assert_called_once()
         assert result == mock_api_client
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
     def test_device_flow_request_error(self, mock_post, mock_get):
         """Test Device Code Flow when device authorization request fails."""
         import requests
@@ -976,7 +989,7 @@ class TestOIDCAuthenticate:
             method="oidc",
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -985,10 +998,10 @@ class TestOIDCAuthenticate:
 
         assert "Failed to request device code" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.oidc.requests.get')
-    @patch('kube_authkit.strategies.oidc.requests.post')
-    @patch('builtins.print')
-    @patch('kube_authkit.strategies.oidc.time.sleep')
+    @patch("kube_authkit.strategies.oidc.requests.get")
+    @patch("kube_authkit.strategies.oidc.requests.post")
+    @patch("builtins.print")
+    @patch("kube_authkit.strategies.oidc.time.sleep")
     def test_device_flow_with_client_secret(self, mock_sleep, mock_print, mock_post, mock_get):
         """Test Device Code Flow with client_secret."""
         # Mock discovery
@@ -1003,7 +1016,7 @@ class TestOIDCAuthenticate:
             "device_code": "test-device-code",
             "user_code": "ABCD-1234",
             "verification_uri": "https://example.com/device",
-            "interval": 0.1
+            "interval": 0.1,
         }
         device_response.raise_for_status.return_value = None
 
@@ -1013,7 +1026,7 @@ class TestOIDCAuthenticate:
         success_response.json.return_value = {
             "access_token": "test-access-token",
             "refresh_token": "test-refresh-token",
-            "expires_in": 3600
+            "expires_in": 3600,
         }
 
         mock_post.side_effect = [device_response, success_response]
@@ -1023,7 +1036,7 @@ class TestOIDCAuthenticate:
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
             client_secret="test-secret",
-            use_device_flow=True
+            use_device_flow=True,
         )
         strategy = OIDCStrategy(config)
 
@@ -1032,17 +1045,19 @@ class TestOIDCAuthenticate:
         # Verify client_secret was included in requests
         assert mock_post.call_count == 2
         # Check device authorization request includes client_secret
-        device_call_data = mock_post.call_args_list[0][1]['data']
-        assert device_call_data['client_secret'] == 'test-secret'
+        device_call_data = mock_post.call_args_list[0][1]["data"]
+        assert device_call_data["client_secret"] == "test-secret"
         # Check token poll request includes client_secret
-        poll_call_data = mock_post.call_args_list[1][1]['data']
-        assert poll_call_data['client_secret'] == 'test-secret'
+        poll_call_data = mock_post.call_args_list[1][1]["data"]
+        assert poll_call_data["client_secret"] == "test-secret"
 
-    @patch.object(OIDCStrategy, 'is_available')
-    @patch.object(OIDCStrategy, '_load_refresh_token')
-    @patch.object(OIDCStrategy, '_refresh_access_token')
-    @patch.object(OIDCStrategy, '_create_api_client')
-    def test_authenticate_with_stored_refresh_token(self, mock_create_client, mock_refresh, mock_load, mock_is_available):
+    @patch.object(OIDCStrategy, "is_available")
+    @patch.object(OIDCStrategy, "_load_refresh_token")
+    @patch.object(OIDCStrategy, "_refresh_access_token")
+    @patch.object(OIDCStrategy, "_create_api_client")
+    def test_authenticate_with_stored_refresh_token(
+        self, mock_create_client, mock_refresh, mock_load, mock_is_available
+    ):
         """Test authenticate using stored refresh token from keyring."""
         mock_is_available.return_value = True
         mock_load.return_value = "stored-refresh-token"
@@ -1050,6 +1065,7 @@ class TestOIDCAuthenticate:
         # Mock the refresh to set an access token
         def set_access_token(token):
             strategy._access_token = "refreshed-access-token"
+
         mock_refresh.side_effect = set_access_token
 
         mock_api_client = Mock()
@@ -1060,7 +1076,7 @@ class TestOIDCAuthenticate:
             oidc_issuer="https://keycloak.example.com/auth/realms/test",
             client_id="test-client",
             use_keyring=True,
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
 
@@ -1072,12 +1088,14 @@ class TestOIDCAuthenticate:
         mock_create_client.assert_called_once()
         assert result == mock_api_client
 
-    @patch.object(OIDCStrategy, 'is_available')
-    @patch.object(OIDCStrategy, '_load_refresh_token')
-    @patch.object(OIDCStrategy, '_refresh_access_token')
-    @patch.object(OIDCStrategy, '_authenticate_device_flow')
-    @patch.object(OIDCStrategy, '_create_api_client')
-    def test_authenticate_stored_token_fails_fallback_to_interactive(self, mock_create_client, mock_device_flow, mock_refresh, mock_load, mock_is_available):
+    @patch.object(OIDCStrategy, "is_available")
+    @patch.object(OIDCStrategy, "_load_refresh_token")
+    @patch.object(OIDCStrategy, "_refresh_access_token")
+    @patch.object(OIDCStrategy, "_authenticate_device_flow")
+    @patch.object(OIDCStrategy, "_create_api_client")
+    def test_authenticate_stored_token_fails_fallback_to_interactive(
+        self, mock_create_client, mock_device_flow, mock_refresh, mock_load, mock_is_available
+    ):
         """Test authenticate falls back to interactive when stored token refresh fails."""
         mock_is_available.return_value = True
         mock_load.return_value = "invalid-refresh-token"
@@ -1091,7 +1109,7 @@ class TestOIDCAuthenticate:
             client_id="test-client",
             use_keyring=True,
             use_device_flow=True,
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
 
@@ -1103,11 +1121,13 @@ class TestOIDCAuthenticate:
         mock_device_flow.assert_called_once()
         assert result == mock_api_client
 
-    @patch.object(OIDCStrategy, 'is_available')
-    @patch.object(OIDCStrategy, '_authenticate_device_flow')
-    @patch.object(OIDCStrategy, '_save_refresh_token')
-    @patch.object(OIDCStrategy, '_create_api_client')
-    def test_authenticate_saves_refresh_token_to_keyring(self, mock_create_client, mock_save, mock_device_flow, mock_is_available):
+    @patch.object(OIDCStrategy, "is_available")
+    @patch.object(OIDCStrategy, "_authenticate_device_flow")
+    @patch.object(OIDCStrategy, "_save_refresh_token")
+    @patch.object(OIDCStrategy, "_create_api_client")
+    def test_authenticate_saves_refresh_token_to_keyring(
+        self, mock_create_client, mock_save, mock_device_flow, mock_is_available
+    ):
         """Test authenticate saves refresh token to keyring after successful auth."""
         mock_is_available.return_value = True
         mock_api_client = Mock()
@@ -1119,7 +1139,7 @@ class TestOIDCAuthenticate:
             client_id="test-client",
             use_keyring=True,
             use_device_flow=True,
-            k8s_api_host="https://api.example.com:6443"
+            k8s_api_host="https://api.example.com:6443",
         )
         strategy = OIDCStrategy(config)
         strategy._refresh_token = "new-refresh-token"

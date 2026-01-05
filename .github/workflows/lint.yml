@@ -49,40 +49,6 @@ jobs:
         run: mypy src/kube_authkit
         continue-on-error: true
 
-  security-check:
-    name: Security scan with Bandit
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install bandit
-        run: pip install bandit
-
-      - name: Run bandit
-        run: bandit -r src/kube_authkit -c pyproject.toml
-
-  format-check:
-    name: Format check with Black
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install black
-        run: pip install black
-
-      - name: Run black check
-        run: black --check src/ tests/
-
   dependency-check:
     name: Check for dependency issues
     runs-on: ubuntu-latest

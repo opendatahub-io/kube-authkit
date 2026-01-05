@@ -89,7 +89,7 @@ class AuthConfig:
         if self.method not in valid_methods:
             raise ConfigurationError(
                 f"Invalid authentication method: {self.method}",
-                f"Valid methods are: {', '.join(sorted(valid_methods))}"
+                f"Valid methods are: {', '.join(sorted(valid_methods))}",
             )
 
         # Validate OIDC-specific configuration
@@ -97,18 +97,18 @@ class AuthConfig:
             if not self.oidc_issuer:
                 raise ConfigurationError(
                     "OIDC authentication requires 'oidc_issuer' parameter",
-                    "Provide oidc_issuer or set OIDC_ISSUER environment variable"
+                    "Provide oidc_issuer or set OIDC_ISSUER environment variable",
                 )
             if not self.client_id:
                 raise ConfigurationError(
                     "OIDC authentication requires 'client_id' parameter",
-                    "Provide client_id or set OIDC_CLIENT_ID environment variable"
+                    "Provide client_id or set OIDC_CLIENT_ID environment variable",
                 )
             # Validate issuer URL format
             if not self.oidc_issuer.startswith(("https://", "http://")):
                 raise ConfigurationError(
                     f"OIDC issuer must be a valid URL: {self.oidc_issuer}",
-                    "issuer should start with https:// (or http:// for local development)"
+                    "issuer should start with https:// (or http:// for local development)",
                 )
             # Warn about http:// (insecure)
             if self.oidc_issuer.startswith("http://"):
@@ -116,7 +116,7 @@ class AuthConfig:
                     f"OIDC issuer uses insecure http:// protocol: {self.oidc_issuer}. "
                     "This should only be used for local development.",
                     SecurityWarning,
-                    stacklevel=2
+                    stacklevel=2,
                 )
 
         # Security warning for disabled SSL verification
@@ -126,21 +126,21 @@ class AuthConfig:
                 "This is insecure and should only be used in development environments. "
                 "Your credentials and data may be exposed to man-in-the-middle attacks.",
                 SecurityWarning,
-                stacklevel=2
+                stacklevel=2,
             )
 
         # Validate CA cert path if provided
         if self.ca_cert and not os.path.exists(self.ca_cert):
             raise ConfigurationError(
                 f"CA certificate file not found: {self.ca_cert}",
-                "Provide a valid path to a CA certificate bundle"
+                "Provide a valid path to a CA certificate bundle",
             )
 
         # Validate kubeconfig path if provided
         if self.kubeconfig_path and not os.path.exists(self.kubeconfig_path):
             raise ConfigurationError(
                 f"Kubeconfig file not found: {self.kubeconfig_path}",
-                "Provide a valid path to a kubeconfig file"
+                "Provide a valid path to a kubeconfig file",
             )
 
     def _load_from_environment(self) -> None:
@@ -185,7 +185,7 @@ class AuthConfig:
         if self.oidc_callback_port < 1 or self.oidc_callback_port > 65535:
             raise ConfigurationError(
                 f"Invalid OIDC callback port: {self.oidc_callback_port}",
-                "Port must be between 1 and 65535"
+                "Port must be between 1 and 65535",
             )
 
     def __repr__(self) -> str:
@@ -249,4 +249,5 @@ class SecurityWarning(UserWarning):
     This custom warning category allows users to filter security warnings
     separately from other warnings if desired.
     """
+
     pass

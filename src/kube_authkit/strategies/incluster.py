@@ -104,7 +104,7 @@ class InClusterStrategy(AuthStrategy):
                 f"1. KUBERNETES_SERVICE_HOST environment variable\n"
                 f"2. Service account token at {TOKEN_PATH}\n"
                 f"3. CA certificate at {CA_CERT_PATH}\n\n"
-                "This authentication method only works when running inside a Kubernetes Pod."
+                "This authentication method only works when running inside a Kubernetes Pod.",
             )
 
         logger.info("Authenticating using in-cluster service account")
@@ -146,12 +146,12 @@ class InClusterStrategy(AuthStrategy):
                 "Failed to load in-cluster configuration",
                 f"Kubernetes config error: {str(e)}\n\n"
                 "This may indicate that the service account token or CA certificate "
-                "is invalid or corrupted."
+                "is invalid or corrupted.",
             ) from e
         except Exception as e:
             raise AuthenticationError(
                 "Unexpected error during in-cluster authentication",
-                f"Error: {type(e).__name__}: {str(e)}"
+                f"Error: {type(e).__name__}: {str(e)}",
             ) from e
 
     def _get_namespace(self) -> str | None:

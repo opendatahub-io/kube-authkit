@@ -96,8 +96,8 @@ class MockOAuthServer:
                 path = parsed.path
 
                 # Parse form data
-                content_length = int(self.headers.get('Content-Length', 0))
-                body = self.rfile.read(content_length).decode('utf-8')
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(content_length).decode("utf-8")
                 params = parse_qs(body)
 
                 if path == "/token":
@@ -120,7 +120,7 @@ class MockOAuthServer:
                     "grant_types_supported": [
                         "authorization_code",
                         "refresh_token",
-                        "urn:ietf:params:oauth:grant-type:device_code"
+                        "urn:ietf:params:oauth:grant-type:device_code",
                     ],
                     "code_challenge_methods_supported": ["S256"],
                 }
@@ -155,7 +155,7 @@ class MockOAuthServer:
                         "redirect_uri": redirect_uri,
                         "code_challenge": code_challenge,
                         "code_challenge_method": code_challenge_method,
-                        "expires": time.time() + 600  # 10 minutes
+                        "expires": time.time() + 600,  # 10 minutes
                     }
 
                     # Redirect back with code
@@ -183,10 +183,13 @@ class MockOAuthServer:
                 elif grant_type == "urn:ietf:params:oauth:grant-type:device_code":
                     self._handle_token_device_code(params, client_id)
                 else:
-                    self._send_json(400, {
-                        "error": "unsupported_grant_type",
-                        "error_description": f"Grant type '{grant_type}' is not supported"
-                    })
+                    self._send_json(
+                        400,
+                        {
+                            "error": "unsupported_grant_type",
+                            "error_description": f"Grant type '{grant_type}' is not supported",
+                        },
+                    )
 
             def _handle_token_auth_code(self, params: dict[str, list], client_id: str):
                 """Handle authorization code grant."""
@@ -196,10 +199,13 @@ class MockOAuthServer:
 
                 # Validate auth code
                 if code not in server.auth_codes:
-                    self._send_json(401, {
-                        "error": "invalid_grant",
-                        "error_description": "Authorization code is invalid or expired"
-                    })
+                    self._send_json(
+                        401,
+                        {
+                            "error": "invalid_grant",
+                            "error_description": "Authorization code is invalid or expired",
+                        },
+                    )
                     return
 
                 auth_data = server.auth_codes[code]
@@ -207,31 +213,44 @@ class MockOAuthServer:
                 # Check expiration
                 if time.time() > auth_data["expires"]:
                     del server.auth_codes[code]
-                    self._send_json(401, {
-                        "error": "invalid_grant",
-                        "error_description": "Authorization code has expired"
-                    })
+                    self._send_json(
+                        401,
+                        {
+                            "error": "invalid_grant",
+                            "error_description": "Authorization code has expired",
+                        },
+                    )
                     return
 
                 # Validate PKCE if present
                 if auth_data.get("code_challenge"):
                     if not code_verifier:
-                        self._send_json(401, {
-                            "error": "invalid_request",
-                            "error_description": "code_verifier is required for PKCE"
-                        })
+                        self._send_json(
+                            401,
+                            {
+                                "error": "invalid_request",
+                                "error_description": "code_verifier is required for PKCE",
+                            },
+                        )
                         return
 
                     # Verify PKCE challenge
-                    challenge = base64.urlsafe_b64encode(
-                        hashlib.sha256(code_verifier.encode('utf-8')).digest()
-                    ).decode('utf-8').rstrip('=')
+                    challenge = (
+                        base64.urlsafe_b64encode(
+                            hashlib.sha256(code_verifier.encode("utf-8")).digest()
+                        )
+                        .decode("utf-8")
+                        .rstrip("=")
+                    )
 
                     if challenge != auth_data["code_challenge"]:
-                        self._send_json(401, {
-                            "error": "invalid_grant",
-                            "error_description": "PKCE verification failed"
-                        })
+                        self._send_json(
+                            401,
+                            {
+                                "error": "invalid_grant",
+                                "error_description": "PKCE verification failed",
+                            },
+                        )
                         return
 
                 # Generate tokens
@@ -240,50 +259,53 @@ class MockOAuthServer:
 
                 server.tokens[access_token] = {
                     "client_id": client_id,
-                    "expires": time.time() + 3600  # 1 hour
+                    "expires": time.time() + 3600,  # 1 hour
                 }
-                server.tokens[refresh_token] = {
-                    "client_id": client_id,
-                    "type": "refresh"
-                }
+                server.tokens[refresh_token] = {"client_id": client_id, "type": "refresh"}
 
                 # Clean up used auth code
                 del server.auth_codes[code]
 
                 # Return tokens
-                self._send_json(200, {
-                    "access_token": access_token,
-                    "token_type": "Bearer",
-                    "expires_in": 3600,
-                    "refresh_token": refresh_token,
-                    "scope": "openid profile email"
-                })
+                self._send_json(
+                    200,
+                    {
+                        "access_token": access_token,
+                        "token_type": "Bearer",
+                        "expires_in": 3600,
+                        "refresh_token": refresh_token,
+                        "scope": "openid profile email",
+                    },
+                )
 
             def _handle_token_refresh(self, params: dict[str, list], client_id: str):
                 """Handle refresh token grant."""
                 refresh_token = params.get("refresh_token", [""])[0]
 
                 if refresh_token not in server.tokens:
-                    self._send_json(401, {
-                        "error": "invalid_grant",
-                        "error_description": "Refresh token is invalid"
-                    })
+                    self._send_json(
+                        401,
+                        {"error": "invalid_grant", "error_description": "Refresh token is invalid"},
+                    )
                     return
 
                 # Generate new access token
                 access_token = f"access_{secrets.token_urlsafe(32)}"
                 server.tokens[access_token] = {
                     "client_id": client_id,
-                    "expires": time.time() + 3600
+                    "expires": time.time() + 3600,
                 }
 
-                self._send_json(200, {
-                    "access_token": access_token,
-                    "token_type": "Bearer",
-                    "expires_in": 3600,
-                    "refresh_token": refresh_token,
-                    "scope": "openid profile email"
-                })
+                self._send_json(
+                    200,
+                    {
+                        "access_token": access_token,
+                        "token_type": "Bearer",
+                        "expires_in": 3600,
+                        "refresh_token": refresh_token,
+                        "scope": "openid profile email",
+                    },
+                )
 
             def _handle_device_code(self, params: dict[str, list]):
                 """Handle device code request."""
@@ -296,27 +318,30 @@ class MockOAuthServer:
                     "client_id": client_id,
                     "user_code": user_code,
                     "status": "pending" if not server.auto_approve else "approved",
-                    "expires": time.time() + 600
+                    "expires": time.time() + 600,
                 }
 
-                self._send_json(200, {
-                    "device_code": device_code,
-                    "user_code": user_code,
-                    "verification_uri": f"{server.base_url}/device",
-                    "verification_uri_complete": f"{server.base_url}/device?user_code={user_code}",
-                    "expires_in": 600,
-                    "interval": 1  # Fast polling for tests
-                })
+                self._send_json(
+                    200,
+                    {
+                        "device_code": device_code,
+                        "user_code": user_code,
+                        "verification_uri": f"{server.base_url}/device",
+                        "verification_uri_complete": f"{server.base_url}/device?user_code={user_code}",
+                        "expires_in": 600,
+                        "interval": 1,  # Fast polling for tests
+                    },
+                )
 
             def _handle_token_device_code(self, params: dict[str, list], client_id: str):
                 """Handle device code token request (polling)."""
                 device_code = params.get("device_code", [""])[0]
 
                 if device_code not in server.device_codes:
-                    self._send_json(400, {
-                        "error": "invalid_grant",
-                        "error_description": "Device code is invalid"
-                    })
+                    self._send_json(
+                        400,
+                        {"error": "invalid_grant", "error_description": "Device code is invalid"},
+                    )
                     return
 
                 device_data = server.device_codes[device_code]
@@ -324,24 +349,27 @@ class MockOAuthServer:
                 # Check expiration
                 if time.time() > device_data["expires"]:
                     del server.device_codes[device_code]
-                    self._send_json(400, {
-                        "error": "expired_token",
-                        "error_description": "Device code has expired"
-                    })
+                    self._send_json(
+                        400,
+                        {"error": "expired_token", "error_description": "Device code has expired"},
+                    )
                     return
 
                 # Check status
                 if device_data["status"] == "pending":
-                    self._send_json(400, {
-                        "error": "authorization_pending",
-                        "error_description": "User has not yet approved the request"
-                    })
+                    self._send_json(
+                        400,
+                        {
+                            "error": "authorization_pending",
+                            "error_description": "User has not yet approved the request",
+                        },
+                    )
                     return
                 elif device_data["status"] == "denied":
-                    self._send_json(400, {
-                        "error": "access_denied",
-                        "error_description": "User denied the request"
-                    })
+                    self._send_json(
+                        400,
+                        {"error": "access_denied", "error_description": "User denied the request"},
+                    )
                     return
 
                 # Approved - generate tokens
@@ -350,23 +378,23 @@ class MockOAuthServer:
 
                 server.tokens[access_token] = {
                     "client_id": client_id,
-                    "expires": time.time() + 3600
+                    "expires": time.time() + 3600,
                 }
-                server.tokens[refresh_token] = {
-                    "client_id": client_id,
-                    "type": "refresh"
-                }
+                server.tokens[refresh_token] = {"client_id": client_id, "type": "refresh"}
 
                 # Clean up device code
                 del server.device_codes[device_code]
 
-                self._send_json(200, {
-                    "access_token": access_token,
-                    "token_type": "Bearer",
-                    "expires_in": 3600,
-                    "refresh_token": refresh_token,
-                    "scope": "openid profile email"
-                })
+                self._send_json(
+                    200,
+                    {
+                        "access_token": access_token,
+                        "token_type": "Bearer",
+                        "expires_in": 3600,
+                        "refresh_token": refresh_token,
+                        "scope": "openid profile email",
+                    },
+                )
 
             def _send_json(self, status: int, data: dict):
                 """Send JSON response."""

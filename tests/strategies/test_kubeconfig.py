@@ -47,7 +47,7 @@ class TestKubeConfigStrategyAvailability:
         strategy = KubeConfigStrategy(config)
 
         # Patch the method to return our mock path
-        with patch.object(strategy, '_get_kubeconfig_path', return_value=str(mock_kubeconfig)):
+        with patch.object(strategy, "_get_kubeconfig_path", return_value=str(mock_kubeconfig)):
             assert strategy.is_available() is True
 
     def test_is_not_available_no_kubeconfig(self, tmp_path, monkeypatch):
@@ -80,8 +80,8 @@ class TestKubeConfigStrategyAvailability:
 class TestKubeConfigStrategyAuthentication:
     """Test authentication flow for KubeConfig strategy."""
 
-    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
+    @patch("kube_authkit.strategies.kubeconfig.client.ApiClient")
     def test_authenticate_success(self, mock_api_client, mock_load_config, mock_kubeconfig):
         """Test successful authentication."""
         # Setup mocks
@@ -98,9 +98,11 @@ class TestKubeConfigStrategyAuthentication:
         assert result == mock_client_instance
         mock_load_config.assert_called_once_with(config_file=str(mock_kubeconfig))
 
-    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
-    def test_authenticate_with_custom_ca_cert(self, mock_api_client, mock_load_config, mock_kubeconfig, tmp_path):
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
+    @patch("kube_authkit.strategies.kubeconfig.client.ApiClient")
+    def test_authenticate_with_custom_ca_cert(
+        self, mock_api_client, mock_load_config, mock_kubeconfig, tmp_path
+    ):
         """Test authentication with custom CA certificate."""
         # Create a mock CA cert file
         ca_cert_path = tmp_path / "ca.crt"
@@ -111,9 +113,7 @@ class TestKubeConfigStrategyAuthentication:
         mock_api_client.return_value = mock_client_instance
 
         config = AuthConfig(
-            method="kubeconfig",
-            kubeconfig_path=str(mock_kubeconfig),
-            ca_cert=str(ca_cert_path)
+            method="kubeconfig", kubeconfig_path=str(mock_kubeconfig), ca_cert=str(ca_cert_path)
         )
         strategy = KubeConfigStrategy(config)
 
@@ -123,9 +123,11 @@ class TestKubeConfigStrategyAuthentication:
         # Verify CA cert was applied
         assert mock_client_instance.configuration.ssl_ca_cert == str(ca_cert_path)
 
-    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
-    @patch('kube_authkit.strategies.kubeconfig.client.ApiClient')
-    def test_authenticate_with_ssl_verification_disabled(self, mock_api_client, mock_load_config, mock_kubeconfig):
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
+    @patch("kube_authkit.strategies.kubeconfig.client.ApiClient")
+    def test_authenticate_with_ssl_verification_disabled(
+        self, mock_api_client, mock_load_config, mock_kubeconfig
+    ):
         """Test authentication with SSL verification disabled."""
         # Setup mocks
         mock_client_instance = MagicMock()
@@ -134,9 +136,7 @@ class TestKubeConfigStrategyAuthentication:
         # Expect SecurityWarning when disabling SSL verification
         with pytest.warns(SecurityWarning, match="TLS/SSL verification is disabled"):
             config = AuthConfig(
-                method="kubeconfig",
-                kubeconfig_path=str(mock_kubeconfig),
-                verify_ssl=False
+                method="kubeconfig", kubeconfig_path=str(mock_kubeconfig), verify_ssl=False
             )
 
         strategy = KubeConfigStrategy(config)
@@ -154,14 +154,14 @@ class TestKubeConfigStrategyAuthentication:
         strategy = KubeConfigStrategy(config)
 
         # Mock is_available to return False
-        with patch.object(strategy, 'is_available', return_value=False):
-            with patch.object(strategy, '_get_kubeconfig_path', return_value=None):
+        with patch.object(strategy, "is_available", return_value=False):
+            with patch.object(strategy, "_get_kubeconfig_path", return_value=None):
                 with pytest.raises(StrategyNotAvailableError) as exc_info:
                     strategy.authenticate()
 
         assert "not available" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
     def test_authenticate_config_exception(self, mock_load_config, mock_kubeconfig):
         """Test authentication handles kubernetes ConfigException."""
         from kubernetes.config import ConfigException
@@ -177,7 +177,7 @@ class TestKubeConfigStrategyAuthentication:
 
         assert "Failed to load kubeconfig" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config')
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
     def test_authenticate_unexpected_exception(self, mock_load_config, mock_kubeconfig):
         """Test authentication handles unexpected exceptions."""
         # Make load_kube_config raise an unexpected exception
@@ -245,7 +245,7 @@ class TestKubeConfigStrategyPathResolution:
 
         # Patch the default path check to return our mock kubeconfig
 
-        with patch('kube_authkit.strategies.kubeconfig.Path') as mock_path_class:
+        with patch("kube_authkit.strategies.kubeconfig.Path") as mock_path_class:
             mock_path_instance = MagicMock()
             mock_path_instance.exists.return_value = True
             mock_path_instance.__str__.return_value = str(mock_kubeconfig)

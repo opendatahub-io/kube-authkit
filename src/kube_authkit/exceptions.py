@@ -39,6 +39,7 @@ class ConfigurationError(AuthenticationError):
         >>> config = AuthConfig(method="oidc")  # Missing required OIDC parameters
         >>> # Raises: ConfigurationError("OIDC authentication requires oidc_issuer")
     """
+
     pass
 
 
@@ -53,6 +54,7 @@ class TokenRefreshError(AuthenticationError):
         >>> # Token refresh fails after refresh_token expires
         >>> # Raises: TokenRefreshError("Refresh token expired, re-authentication required")
     """
+
     pass
 
 
@@ -68,6 +70,7 @@ class StrategyNotAvailableError(AuthenticationError):
         >>> # Running locally without service account token
         >>> # Raises: StrategyNotAvailableError("In-cluster auth not available: ...")
     """
+
     pass
 
 
@@ -77,6 +80,7 @@ class OIDCError(AuthenticationError):
     Raised when OIDC authentication fails for reasons specific to the
     OIDC protocol (discovery failures, token endpoint errors, etc.).
     """
+
     pass
 
 
@@ -86,4 +90,5 @@ class OpenShiftOAuthError(AuthenticationError):
     Raised when OpenShift OAuth authentication fails for reasons specific
     to OpenShift's OAuth implementation.
     """
+
     pass

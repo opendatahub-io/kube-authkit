@@ -76,20 +76,14 @@ class TestAuthConfigValidation:
     def test_oidc_invalid_issuer_url(self, mock_env_vars):
         """Test that OIDC with invalid issuer URL raises ConfigurationError."""
         with pytest.raises(ConfigurationError) as exc_info:
-            AuthConfig(
-                method="oidc",
-                oidc_issuer="not-a-url",
-                client_id="test-client"
-            )
+            AuthConfig(method="oidc", oidc_issuer="not-a-url", client_id="test-client")
 
         assert "valid URL" in str(exc_info.value)
 
     def test_oidc_valid_config(self, mock_env_vars):
         """Test that valid OIDC config passes validation."""
         config = AuthConfig(
-            method="oidc",
-            oidc_issuer="https://keycloak.example.com",
-            client_id="test-client"
+            method="oidc", oidc_issuer="https://keycloak.example.com", client_id="test-client"
         )
         assert config.method == "oidc"
 
@@ -145,9 +139,7 @@ class TestAuthConfigEnvironmentVariables:
     def test_explicit_overrides_env(self, mock_oidc_env):
         """Test that explicit params override environment variables."""
         config = AuthConfig(
-            method="oidc",
-            oidc_issuer="https://override.example.com",
-            client_id="override-client"
+            method="oidc", oidc_issuer="https://override.example.com", client_id="override-client"
         )
         assert config.oidc_issuer == "https://override.example.com"
         assert config.client_id == "override-client"
@@ -181,9 +173,7 @@ class TestAuthConfigSecurityWarnings:
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             AuthConfig(
-                method="oidc",
-                oidc_issuer="http://insecure.example.com",
-                client_id="test-client"
+                method="oidc", oidc_issuer="http://insecure.example.com", client_id="test-client"
             )
 
             assert len(w) == 1
@@ -200,7 +190,7 @@ class TestAuthConfigSensitiveDataHandling:
             method="oidc",
             oidc_issuer="https://test.example.com",
             client_id="test-client",
-            client_secret="super-secret-value"
+            client_secret="super-secret-value",
         )
 
         repr_str = repr(config)
@@ -224,7 +214,7 @@ class TestAuthConfigFromDict:
             "method": "oidc",
             "oidc_issuer": "https://test.example.com",
             "client_id": "test-client",
-            "scopes": ["openid", "profile"]
+            "scopes": ["openid", "profile"],
         }
         config = AuthConfig.from_dict(config_dict)
 
@@ -235,11 +225,7 @@ class TestAuthConfigFromDict:
 
     def test_from_dict_ignores_unknown_keys(self, mock_env_vars):
         """Test that from_dict ignores unknown keys."""
-        config_dict = {
-            "method": "auto",
-            "unknown_key": "should be ignored",
-            "another_unknown": 123
-        }
+        config_dict = {"method": "auto", "unknown_key": "should be ignored", "another_unknown": 123}
         config = AuthConfig.from_dict(config_dict)
         assert config.method == "auto"
         # Should not raise an error

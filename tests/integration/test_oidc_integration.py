@@ -37,7 +37,7 @@ class TestOIDCIntegrationAuthCodeFlow:
                 k8s_api_host="https://test-k8s.example.com:6443",
                 use_device_flow=False,
                 oidc_callback_port=8080,
-                verify_ssl=False  # Mock server uses http
+                verify_ssl=False,  # Mock server uses http
             )
 
         strategy = OIDCStrategy(config)
@@ -46,9 +46,9 @@ class TestOIDCIntegrationAuthCodeFlow:
         assert strategy.is_available()
 
         # Mock the browser opening and callback handling
-        with patch('webbrowser.open'):
+        with patch("webbrowser.open"):
             # Mock the callback server to simulate successful auth
-            with patch('kube_authkit.strategies.oidc.HTTPServer') as mock_server:
+            with patch("kube_authkit.strategies.oidc.HTTPServer") as mock_server:
                 # Simulate auth code callback
                 MagicMock()
                 mock_server_instance = MagicMock()
@@ -60,7 +60,6 @@ class TestOIDCIntegrationAuthCodeFlow:
                 def simulate_callback(*args, **kwargs):
                     """Simulate receiving auth code."""
                     # Request auth code from mock server
-
 
                     # The mock server will auto-approve and return a code
                     # We simulate this by directly calling token endpoint
@@ -77,7 +76,7 @@ class TestOIDCIntegrationAuthCodeFlow:
                     strategy._access_token = "access_test_token_123"
                     strategy._refresh_token = "refresh_test_token_123"
 
-                with patch.object(strategy, '_authenticate_auth_code_flow', mock_auth):
+                with patch.object(strategy, "_authenticate_auth_code_flow", mock_auth):
                     api_client = strategy.authenticate()
 
                     # Verify we got an API client
@@ -92,7 +91,7 @@ class TestOIDCIntegrationAuthCodeFlow:
                 method="oidc",
                 oidc_issuer=mock_oauth_server.base_url,
                 client_id="test-client",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OIDCStrategy(config)
@@ -112,7 +111,7 @@ class TestOIDCIntegrationAuthCodeFlow:
                 method="oidc",
                 oidc_issuer=mock_oauth_server.base_url,
                 client_id=mock_oauth_server.client_id,
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OIDCStrategy(config)
@@ -122,7 +121,7 @@ class TestOIDCIntegrationAuthCodeFlow:
         refresh_token = "refresh_test_token"
         mock_oauth_server.tokens[refresh_token] = {
             "client_id": mock_oauth_server.client_id,
-            "type": "refresh"
+            "type": "refresh",
         }
 
         # Now test refresh
@@ -146,14 +145,17 @@ class TestOIDCIntegrationDeviceFlow:
                 oidc_issuer=mock_oauth_server.base_url,
                 client_id=mock_oauth_server.client_id,
                 use_device_flow=True,
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OIDCStrategy(config)
         oidc_config = strategy._discover_oidc_config()
 
         assert "device_authorization_endpoint" in oidc_config
-        assert oidc_config["device_authorization_endpoint"] == f"{mock_oauth_server.base_url}/device/code"
+        assert (
+            oidc_config["device_authorization_endpoint"]
+            == f"{mock_oauth_server.base_url}/device/code"
+        )
 
     def test_device_flow_with_auto_approve(self, mock_oauth_server, mock_env_vars):
         """Test device code flow with auto-approval."""
@@ -165,7 +167,7 @@ class TestOIDCIntegrationDeviceFlow:
                 client_id=mock_oauth_server.client_id,
                 k8s_api_host="https://test-k8s.example.com:6443",
                 use_device_flow=True,
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         # Ensure auto-approve is enabled
@@ -174,7 +176,7 @@ class TestOIDCIntegrationDeviceFlow:
         strategy = OIDCStrategy(config)
 
         # Patch print to suppress output during test
-        with patch('builtins.print'):
+        with patch("builtins.print"):
             # Authenticate using device flow
             api_client = strategy.authenticate()
 
@@ -196,7 +198,7 @@ class TestOIDCIntegrationErrorHandling:
                 method="oidc",
                 oidc_issuer=mock_oauth_server.base_url,
                 client_id=mock_oauth_server.client_id,
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OIDCStrategy(config)
@@ -215,7 +217,7 @@ class TestOIDCIntegrationErrorHandling:
                 method="oidc",
                 oidc_issuer="http://nonexistent-server-xyz.invalid:9876",
                 client_id="test-client",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OIDCStrategy(config)
@@ -238,10 +240,14 @@ class TestOIDCIntegrationPKCE:
         import requests
 
         # Generate PKCE parameters
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         # Request authorization with PKCE
         auth_response = requests.get(
@@ -252,9 +258,9 @@ class TestOIDCIntegrationPKCE:
                 "redirect_uri": "http://localhost:8080/callback",
                 "code_challenge": code_challenge,
                 "code_challenge_method": "S256",
-                "state": "test_state"
+                "state": "test_state",
             },
-            allow_redirects=False
+            allow_redirects=False,
         )
 
         # Mock server should return redirect with auth code
@@ -264,6 +270,7 @@ class TestOIDCIntegrationPKCE:
 
         # Extract auth code
         from urllib.parse import parse_qs, urlparse
+
         parsed = urlparse(location)
         params = parse_qs(parsed.query)
         auth_code = params["code"][0]
@@ -276,8 +283,8 @@ class TestOIDCIntegrationPKCE:
                 "code": auth_code,
                 "redirect_uri": "http://localhost:8080/callback",
                 "grant_type": "authorization_code",
-                "code_verifier": code_verifier
-            }
+                "code_verifier": code_verifier,
+            },
         )
 
         # Should succeed with valid verifier
@@ -295,10 +302,14 @@ class TestOIDCIntegrationPKCE:
         import requests
 
         # Generate PKCE parameters
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         # Request authorization
         auth_response = requests.get(
@@ -310,18 +321,21 @@ class TestOIDCIntegrationPKCE:
                 "code_challenge": code_challenge,
                 "code_challenge_method": "S256",
             },
-            allow_redirects=False
+            allow_redirects=False,
         )
 
         # Extract auth code
         from urllib.parse import parse_qs, urlparse
+
         location = auth_response.headers.get("Location", "")
         parsed = urlparse(location)
         params = parse_qs(parsed.query)
         auth_code = params["code"][0]
 
         # Try to exchange with WRONG verifier
-        wrong_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        wrong_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
 
         token_response = requests.post(
             f"{mock_oauth_server.base_url}/token",
@@ -330,8 +344,8 @@ class TestOIDCIntegrationPKCE:
                 "code": auth_code,
                 "redirect_uri": "http://localhost:8080/callback",
                 "grant_type": "authorization_code",
-                "code_verifier": wrong_verifier  # Wrong verifier!
-            }
+                "code_verifier": wrong_verifier,  # Wrong verifier!
+            },
         )
 
         # Should fail with 401

@@ -129,8 +129,7 @@ class AuthFactory:
         if strategy_class is None:
             available = ", ".join(sorted(strategy_map.keys()))
             raise ConfigurationError(
-                f"Unknown authentication method: {method}",
-                f"Available methods: {available}"
+                f"Unknown authentication method: {method}", f"Available methods: {available}"
             )
 
         # Create and validate strategy
@@ -139,7 +138,7 @@ class AuthFactory:
         if not strategy.is_available():
             raise ConfigurationError(
                 f"Authentication method '{method}' is not available in this environment",
-                f"Strategy check failed: {strategy.get_description()}"
+                f"Strategy check failed: {strategy.get_description()}",
             )
 
         return strategy
@@ -198,7 +197,7 @@ class AuthFactory:
             "- Use kubectl to log in and generate ~/.kube/config\n"
             "- Run inside a Kubernetes Pod with a service account\n"
             "- Provide explicit OIDC configuration via AuthConfig\n"
-            "- Set OIDC environment variables (OIDC_ISSUER, OIDC_CLIENT_ID)"
+            "- Set OIDC environment variables (OIDC_ISSUER, OIDC_CLIENT_ID)",
         )
 
     def _has_oidc_env_vars(self) -> bool:
