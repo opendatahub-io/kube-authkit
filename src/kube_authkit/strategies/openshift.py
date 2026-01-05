@@ -267,8 +267,8 @@ class OpenShiftOAuthStrategy(AuthStrategy):
                             f"""
                             <html><body>
                             <h1>Authentication Failed</h1>
-                            <p>Error: {auth_result['error']}</p>
-                            <p>{auth_result.get('error_description', '')}</p>
+                            <p>Error: {auth_result["error"]}</p>
+                            <p>{auth_result.get("error_description", "")}</p>
                             </body></html>
                         """.encode()
                         )

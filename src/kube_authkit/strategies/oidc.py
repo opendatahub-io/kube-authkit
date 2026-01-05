@@ -234,16 +234,16 @@ class OIDCStrategy(AuthStrategy):
         device_code = device_response.get("device_code")
         interval = device_response.get("interval", 5)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("OIDC Device Code Authentication")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         if verification_uri_complete:
             print("\nPlease visit this URL to authenticate:")
             print(f"\n  {verification_uri_complete}\n")
         else:
             print(f"\nPlease visit this URL: {verification_uri}")
             print(f"And enter this code: {user_code}\n")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Poll for token
         token_endpoint = oidc_config["token_endpoint"]
@@ -373,8 +373,8 @@ class OIDCStrategy(AuthStrategy):
                             f"""
                             <html><body>
                             <h1>Authentication Failed</h1>
-                            <p>Error: {auth_result['error']}</p>
-                            <p>{auth_result.get('error_description', '')}</p>
+                            <p>Error: {auth_result["error"]}</p>
+                            <p>{auth_result.get("error_description", "")}</p>
                             </body></html>
                         """.encode()
                         )
