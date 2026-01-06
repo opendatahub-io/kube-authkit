@@ -24,6 +24,7 @@ class ConcreteStrategy(AuthStrategy):
 
 class IncompleteStrategy(AuthStrategy):
     """Incomplete implementation missing abstract methods."""
+
     pass
 
 

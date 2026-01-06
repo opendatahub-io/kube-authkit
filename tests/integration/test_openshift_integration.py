@@ -27,7 +27,7 @@ class TestOpenShiftIntegrationAuthentication:
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
                 openshift_token="sha256~explicit-test-token",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -41,7 +41,9 @@ class TestOpenShiftIntegrationAuthentication:
         # Verify we got a valid API client
         assert api_client is not None
         assert api_client.configuration.host == "https://api.openshift.example.com:6443"
-        assert "Bearer sha256~explicit-test-token" in str(api_client.configuration.api_key["authorization"])
+        assert "Bearer sha256~explicit-test-token" in str(
+            api_client.configuration.api_key["authorization"]
+        )
 
     def test_authenticate_with_env_token(self, monkeypatch, mock_env_vars):
         """Test authentication with token from environment variable."""
@@ -52,7 +54,7 @@ class TestOpenShiftIntegrationAuthentication:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -61,16 +63,16 @@ class TestOpenShiftIntegrationAuthentication:
 
         api_client = strategy.authenticate()
         assert api_client is not None
-        assert "Bearer sha256~env-test-token" in str(api_client.configuration.api_key["authorization"])
+        assert "Bearer sha256~env-test-token" in str(
+            api_client.configuration.api_key["authorization"]
+        )
 
     def test_oauth_discovery_with_mock_server(self, mock_oauth_server, mock_env_vars):
         """Test OAuth metadata discovery."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", SecurityWarning)
             config = AuthConfig(
-                method="openshift",
-                k8s_api_host=mock_oauth_server.base_url,
-                verify_ssl=False
+                method="openshift", k8s_api_host=mock_oauth_server.base_url, verify_ssl=False
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -91,7 +93,7 @@ class TestOpenShiftIntegrationAuthentication:
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
                 openshift_token="sha256~test-token",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -114,9 +116,7 @@ class TestOpenShiftIntegrationOAuthFlow:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", SecurityWarning)
             config = AuthConfig(
-                method="openshift",
-                k8s_api_host=mock_oauth_server.base_url,
-                verify_ssl=False
+                method="openshift", k8s_api_host=mock_oauth_server.base_url, verify_ssl=False
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -131,7 +131,7 @@ class TestOpenShiftIntegrationOAuthFlow:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -140,7 +140,9 @@ class TestOpenShiftIntegrationOAuthFlow:
         api_client = strategy._create_api_client()
 
         assert api_client is not None
-        assert "Bearer test-access-token-123" in str(api_client.configuration.api_key["authorization"])
+        assert "Bearer test-access-token-123" in str(
+            api_client.configuration.api_key["authorization"]
+        )
 
 
 @pytest.mark.integration
@@ -154,7 +156,7 @@ class TestOpenShiftIntegrationErrorHandling:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="http://nonexistent-openshift.invalid:6443",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -169,7 +171,7 @@ class TestOpenShiftIntegrationErrorHandling:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="http://nonexistent-openshift.invalid:6443",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -185,7 +187,7 @@ class TestOpenShiftIntegrationErrorHandling:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)
@@ -208,7 +210,7 @@ class TestOpenShiftIntegrationSSL:
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
                 openshift_token="sha256~test-token",
-                verify_ssl=False
+                verify_ssl=False,
             )
 
         strategy = OpenShiftOAuthStrategy(config)

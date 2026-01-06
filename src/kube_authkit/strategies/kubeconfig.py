@@ -77,7 +77,7 @@ class KubeConfigStrategy(AuthStrategy):
                 f"No kubeconfig file found. Checked:\n"
                 f"1. Config parameter: {self.config.kubeconfig_path}\n"
                 f"2. KUBECONFIG env var: {os.getenv('KUBECONFIG')}\n"
-                f"3. Default path: ~/.kube/config"
+                f"3. Default path: ~/.kube/config",
             )
 
         kubeconfig_path = self._get_kubeconfig_path()
@@ -87,9 +87,7 @@ class KubeConfigStrategy(AuthStrategy):
             # Load kubeconfig and return configured ApiClient
             # The load_kube_config function configures the global kubernetes
             # client configuration. We then create an ApiClient from that config.
-            k8s_config.load_kube_config(
-                config_file=kubeconfig_path
-            )
+            k8s_config.load_kube_config(config_file=kubeconfig_path)
 
             # Create and return ApiClient
             api_client = client.ApiClient()
@@ -110,12 +108,11 @@ class KubeConfigStrategy(AuthStrategy):
         except ConfigException as e:
             raise AuthenticationError(
                 f"Failed to load kubeconfig from {kubeconfig_path}",
-                f"Kubernetes config error: {str(e)}"
+                f"Kubernetes config error: {str(e)}",
             ) from e
         except Exception as e:
             raise AuthenticationError(
-                "Unexpected error loading kubeconfig",
-                f"Error: {type(e).__name__}: {str(e)}"
+                "Unexpected error loading kubeconfig", f"Error: {type(e).__name__}: {str(e)}"
             ) from e
 
     def _get_kubeconfig_path(self) -> str | None:

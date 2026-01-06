@@ -122,7 +122,7 @@ class OIDCStrategy(AuthStrategy):
                 "OIDC authentication not available",
                 f"OIDC issuer and client ID must be configured.\n"
                 f"Current config: issuer={self.config.oidc_issuer}, "
-                f"client_id={self.config.client_id}"
+                f"client_id={self.config.client_id}",
             )
 
         logger.info(f"Authenticating via OIDC to {self.config.oidc_issuer}")
@@ -166,28 +166,33 @@ class OIDCStrategy(AuthStrategy):
         if self._oidc_config:
             return self._oidc_config
 
+        # Validate oidc_issuer is configured
+        if not self.config.oidc_issuer:
+            raise AuthenticationError(
+                "OIDC authentication requires oidc_issuer to be configured",
+                "oidc_issuer is None",
+            )
+
         discovery_url = f"{self.config.oidc_issuer.rstrip('/')}/.well-known/openid-configuration"
         logger.debug(f"Fetching OIDC discovery document from {discovery_url}")
 
         try:
-            response = requests.get(
-                discovery_url,
-                verify=self.config.verify_ssl,
-                timeout=10
-            )
+            response = requests.get(discovery_url, verify=self.config.verify_ssl, timeout=10)
             response.raise_for_status()
             self._oidc_config = response.json()
 
-            logger.debug(f"OIDC discovery successful. Endpoints: "
-                        f"authorization={self._oidc_config.get('authorization_endpoint')}, "
-                        f"token={self._oidc_config.get('token_endpoint')}")
+            logger.debug(
+                f"OIDC discovery successful. Endpoints: "
+                f"authorization={self._oidc_config.get('authorization_endpoint')}, "
+                f"token={self._oidc_config.get('token_endpoint')}"
+            )
 
             return self._oidc_config
 
         except requests.RequestException as e:
             raise AuthenticationError(
                 f"Failed to discover OIDC configuration from {self.config.oidc_issuer}",
-                f"Error fetching {discovery_url}: {str(e)}"
+                f"Error fetching {discovery_url}: {str(e)}",
             ) from e
 
     def _authenticate_device_flow(self) -> None:
@@ -207,14 +212,11 @@ class OIDCStrategy(AuthStrategy):
         if not device_authorization_endpoint:
             raise AuthenticationError(
                 "Device Code Flow not supported by this OIDC provider",
-                "The OIDC discovery document does not include 'device_authorization_endpoint'"
+                "The OIDC discovery document does not include 'device_authorization_endpoint'",
             )
 
         # Request device code
-        device_data = {
-            "client_id": self.config.client_id,
-            "scope": " ".join(self.config.scopes)
-        }
+        device_data = {"client_id": self.config.client_id, "scope": " ".join(self.config.scopes)}
 
         if self.config.client_secret:
             device_data["client_secret"] = self.config.client_secret
@@ -224,16 +226,13 @@ class OIDCStrategy(AuthStrategy):
                 device_authorization_endpoint,
                 data=device_data,
                 verify=self.config.verify_ssl,
-                timeout=10
+                timeout=10,
             )
             response.raise_for_status()
             device_response = response.json()
 
         except requests.RequestException as e:
-            raise AuthenticationError(
-                "Failed to request device code",
-                str(e)
-            ) from e
+            raise AuthenticationError("Failed to request device code", str(e)) from e
 
         # Display instructions to user
         verification_uri = device_response.get("verification_uri")
@@ -242,23 +241,23 @@ class OIDCStrategy(AuthStrategy):
         device_code = device_response.get("device_code")
         interval = device_response.get("interval", 5)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("OIDC Device Code Authentication")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         if verification_uri_complete:
             print("\nPlease visit this URL to authenticate:")
             print(f"\n  {verification_uri_complete}\n")
         else:
             print(f"\nPlease visit this URL: {verification_uri}")
             print(f"And enter this code: {user_code}\n")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Poll for token
         token_endpoint = oidc_config["token_endpoint"]
         poll_data = {
             "client_id": self.config.client_id,
             "device_code": device_code,
-            "grant_type": "urn:ietf:params:oauth:grant-type:device_code"
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
         }
 
         if self.config.client_secret:
@@ -269,10 +268,7 @@ class OIDCStrategy(AuthStrategy):
 
             try:
                 poll_response = requests.post(
-                    token_endpoint,
-                    data=poll_data,
-                    verify=self.config.verify_ssl,
-                    timeout=10
+                    token_endpoint, data=poll_data, verify=self.config.verify_ssl, timeout=10
                 )
 
                 if poll_response.status_code == 200:
@@ -302,20 +298,18 @@ class OIDCStrategy(AuthStrategy):
                     continue
                 elif error in ("expired_token", "access_denied"):
                     raise AuthenticationError(
-                        f"Device Code Flow failed: {error}",
-                        error_data.get("error_description", "")
+                        f"Device Code Flow failed: {error}", error_data.get("error_description", "")
                     )
                 else:
                     # Unknown error
                     raise AuthenticationError(
                         f"Device Code Flow failed with error: {error}",
-                        error_data.get("error_description", "")
+                        error_data.get("error_description", ""),
                     )
 
             except requests.RequestException as e:
                 raise AuthenticationError(
-                    "Failed to poll for device code authorization",
-                    str(e)
+                    "Failed to poll for device code authorization", str(e)
                 ) from e
 
     def _authenticate_auth_code_flow(self) -> None:
@@ -336,14 +330,18 @@ class OIDCStrategy(AuthStrategy):
         if not authorization_endpoint or not token_endpoint:
             raise AuthenticationError(
                 "Authorization Code Flow not supported",
-                "OIDC discovery document missing required endpoints"
+                "OIDC discovery document missing required endpoints",
             )
 
         # Generate PKCE challenge
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         # Start local callback server on configured port
         callback_port = self.config.oidc_callback_port
@@ -364,25 +362,29 @@ class OIDCStrategy(AuthStrategy):
                         self.send_response(200)
                         self.send_header("Content-type", "text/html")
                         self.end_headers()
-                        self.wfile.write(b"""
+                        self.wfile.write(
+                            b"""
                             <html><body>
                             <h1>Authentication Successful!</h1>
                             <p>You can close this window and return to your application.</p>
                             </body></html>
-                        """)
+                        """
+                        )
                     elif "error" in params:
                         auth_result["error"] = params["error"][0]
                         auth_result["error_description"] = params.get("error_description", [""])[0]
                         self.send_response(400)
                         self.send_header("Content-type", "text/html")
                         self.end_headers()
-                        self.wfile.write(f"""
+                        self.wfile.write(
+                            f"""
                             <html><body>
                             <h1>Authentication Failed</h1>
-                            <p>Error: {auth_result['error']}</p>
-                            <p>{auth_result.get('error_description', '')}</p>
+                            <p>Error: {auth_result["error"]}</p>
+                            <p>{auth_result.get("error_description", "")}</p>
                             </body></html>
-                        """.encode())
+                        """.encode()
+                        )
                 else:
                     self.send_response(404)
                     self.end_headers()
@@ -404,7 +406,7 @@ class OIDCStrategy(AuthStrategy):
             "scope": " ".join(self.config.scopes),
             "code_challenge": code_challenge,
             "code_challenge_method": "S256",
-            "state": secrets.token_urlsafe(16)
+            "state": secrets.token_urlsafe(16),
         }
 
         auth_url = f"{authorization_endpoint}?{urlencode(auth_params)}"
@@ -421,13 +423,13 @@ class OIDCStrategy(AuthStrategy):
         if "error" in auth_result:
             raise AuthenticationError(
                 f"Authorization failed: {auth_result['error']}",
-                auth_result.get("error_description", "")
+                auth_result.get("error_description", ""),
             )
 
         if "code" not in auth_result:
             raise AuthenticationError(
                 "Authorization Code Flow failed",
-                "No authorization code received (timeout or user cancelled)"
+                "No authorization code received (timeout or user cancelled)",
             )
 
         # Exchange code for tokens
@@ -436,7 +438,7 @@ class OIDCStrategy(AuthStrategy):
             "code": auth_result["code"],
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
-            "code_verifier": code_verifier
+            "code_verifier": code_verifier,
         }
 
         if self.config.client_secret:
@@ -444,10 +446,7 @@ class OIDCStrategy(AuthStrategy):
 
         try:
             response = requests.post(
-                token_endpoint,
-                data=token_data,
-                verify=self.config.verify_ssl,
-                timeout=10
+                token_endpoint, data=token_data, verify=self.config.verify_ssl, timeout=10
             )
             response.raise_for_status()
             token_response = response.json()
@@ -465,7 +464,7 @@ class OIDCStrategy(AuthStrategy):
         except requests.RequestException as e:
             # Try to extract OAuth error details from response
             error_detail = str(e)
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_type = error_data.get("error", "unknown_error")
@@ -476,8 +475,7 @@ class OIDCStrategy(AuthStrategy):
                     pass
 
             raise AuthenticationError(
-                "Failed to exchange authorization code for tokens",
-                error_detail
+                "Failed to exchange authorization code for tokens", error_detail
             ) from e
 
     def _refresh_access_token(self, refresh_token: str) -> None:
@@ -496,14 +494,13 @@ class OIDCStrategy(AuthStrategy):
 
         if not token_endpoint:
             raise AuthenticationError(
-                "Token refresh not supported",
-                "OIDC discovery document missing token_endpoint"
+                "Token refresh not supported", "OIDC discovery document missing token_endpoint"
             )
 
         token_data = {
             "client_id": self.config.client_id,
             "grant_type": "refresh_token",
-            "refresh_token": refresh_token
+            "refresh_token": refresh_token,
         }
 
         if self.config.client_secret:
@@ -511,10 +508,7 @@ class OIDCStrategy(AuthStrategy):
 
         try:
             response = requests.post(
-                token_endpoint,
-                data=token_data,
-                verify=self.config.verify_ssl,
-                timeout=10
+                token_endpoint, data=token_data, verify=self.config.verify_ssl, timeout=10
             )
             response.raise_for_status()
             token_response = response.json()
@@ -531,7 +525,7 @@ class OIDCStrategy(AuthStrategy):
         except requests.RequestException as e:
             # Try to extract OAuth error details from response
             error_detail = str(e)
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_type = error_data.get("error", "unknown_error")
@@ -541,10 +535,7 @@ class OIDCStrategy(AuthStrategy):
                     # If we can't parse JSON, use the original error
                     pass
 
-            raise AuthenticationError(
-                "Failed to refresh access token",
-                error_detail
-            ) from e
+            raise AuthenticationError("Failed to refresh access token", error_detail) from e
 
     def _create_api_client(self) -> ApiClient:
         """Create and configure Kubernetes ApiClient with OIDC token.
@@ -558,7 +549,7 @@ class OIDCStrategy(AuthStrategy):
         if not self.config.k8s_api_host:
             raise ConfigurationError(
                 "Kubernetes API host not configured",
-                "Please provide k8s_api_host in AuthConfig when using OIDC authentication"
+                "Please provide k8s_api_host in AuthConfig when using OIDC authentication",
             )
 
         # Create configuration
@@ -587,6 +578,7 @@ class OIDCStrategy(AuthStrategy):
 
         try:
             import keyring
+
             service_name = f"openshift-ai-auth:{self.config.oidc_issuer}"
             username = self.config.client_id
 
@@ -613,6 +605,7 @@ class OIDCStrategy(AuthStrategy):
 
         try:
             import keyring
+
             service_name = f"openshift-ai-auth:{self.config.oidc_issuer}"
             username = self.config.client_id
 

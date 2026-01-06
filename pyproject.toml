@@ -26,9 +26,10 @@ classifiers = [
 ]
 
 dependencies = [
-    "kubernetes>=28.0.0",
+    "kubernetes>=27.2.0",
     "requests>=2.31.0",
     "PyJWT>=2.8.0",
+    "urllib3>=2.6.0",
 ]
 
 [project.optional-dependencies]
@@ -37,10 +38,7 @@ dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.11.1",
-    "mypy>=1.5.0",
-    "black>=23.0.0",
     "ruff>=0.1.0",
-    "bandit>=1.7.5",
 ]
 
 [project.urls]
@@ -78,27 +76,11 @@ filterwarnings = [
     "ignore::pytest.PytestUnraisableExceptionWarning",  # Ignore unraisable exceptions
 ]
 
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-strict_equality = true
-
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312']
-include = '\.pyi?$'
-
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -109,9 +91,5 @@ select = [
     "UP", # pyupgrade
 ]
 ignore = [
-    "E501", # line too long (handled by black)
+    "E501", # line too long (handled by ruff format)
 ]
-
-[tool.bandit]
-exclude_dirs = ["tests"]
-skips = ["B101"] # assert_used (needed in tests)

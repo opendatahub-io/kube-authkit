@@ -129,7 +129,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             raise StrategyNotAvailableError(
                 "OpenShift OAuth authentication not available",
                 f"k8s_api_host must be configured and OAuth server must be reachable.\n"
-                f"Current config: k8s_api_host={self.config.k8s_api_host}"
+                f"Current config: k8s_api_host={self.config.k8s_api_host}",
             )
 
         logger.info(f"Authenticating via OpenShift OAuth to {self.config.k8s_api_host}")
@@ -174,31 +174,36 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         if self._oauth_metadata:
             return self._oauth_metadata
 
+        # Validate k8s_api_host is configured
+        if not self.config.k8s_api_host:
+            raise AuthenticationError(
+                "OpenShift OAuth requires k8s_api_host to be configured",
+                "k8s_api_host is None",
+            )
+
         # Construct discovery URL
-        api_host = self.config.k8s_api_host.rstrip('/')
+        api_host = self.config.k8s_api_host.rstrip("/")
         discovery_url = f"{api_host}/.well-known/oauth-authorization-server"
 
         logger.debug(f"Fetching OpenShift OAuth metadata from {discovery_url}")
 
         try:
-            response = requests.get(
-                discovery_url,
-                verify=self.config.verify_ssl,
-                timeout=10
-            )
+            response = requests.get(discovery_url, verify=self.config.verify_ssl, timeout=10)
             response.raise_for_status()
             self._oauth_metadata = response.json()
 
-            logger.debug(f"OpenShift OAuth discovery successful. Endpoints: "
-                        f"authorization={self._oauth_metadata.get('authorization_endpoint')}, "
-                        f"token={self._oauth_metadata.get('token_endpoint')}")
+            logger.debug(
+                f"OpenShift OAuth discovery successful. Endpoints: "
+                f"authorization={self._oauth_metadata.get('authorization_endpoint')}, "
+                f"token={self._oauth_metadata.get('token_endpoint')}"
+            )
 
             return self._oauth_metadata
 
         except requests.RequestException as e:
             raise AuthenticationError(
                 f"Failed to discover OpenShift OAuth metadata from {self.config.k8s_api_host}",
-                f"Error fetching {discovery_url}: {str(e)}"
+                f"Error fetching {discovery_url}: {str(e)}",
             ) from e
 
     def _authenticate_interactive(self) -> None:
@@ -219,14 +224,18 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         if not authorization_endpoint or not token_endpoint:
             raise AuthenticationError(
                 "OpenShift OAuth not properly configured",
-                "OAuth metadata missing required endpoints"
+                "OAuth metadata missing required endpoints",
             )
 
         # Generate PKCE challenge
-        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
-        code_challenge = base64.urlsafe_b64encode(
-            hashlib.sha256(code_verifier.encode('utf-8')).digest()
-        ).decode('utf-8').rstrip('=')
+        code_verifier = (
+            base64.urlsafe_b64encode(secrets.token_bytes(32)).decode("utf-8").rstrip("=")
+        )
+        code_challenge = (
+            base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode("utf-8")).digest())
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
         # Start local callback server on configured port
         callback_port = self.config.oidc_callback_port
@@ -247,25 +256,29 @@ class OpenShiftOAuthStrategy(AuthStrategy):
                         self.send_response(200)
                         self.send_header("Content-type", "text/html")
                         self.end_headers()
-                        self.wfile.write(b"""
+                        self.wfile.write(
+                            b"""
                             <html><body>
                             <h1>OpenShift Authentication Successful!</h1>
                             <p>You can close this window and return to your application.</p>
                             </body></html>
-                        """)
+                        """
+                        )
                     elif "error" in params:
                         auth_result["error"] = params["error"][0]
                         auth_result["error_description"] = params.get("error_description", [""])[0]
                         self.send_response(400)
                         self.send_header("Content-type", "text/html")
                         self.end_headers()
-                        self.wfile.write(f"""
+                        self.wfile.write(
+                            f"""
                             <html><body>
                             <h1>Authentication Failed</h1>
-                            <p>Error: {auth_result['error']}</p>
-                            <p>{auth_result.get('error_description', '')}</p>
+                            <p>Error: {auth_result["error"]}</p>
+                            <p>{auth_result.get("error_description", "")}</p>
                             </body></html>
-                        """.encode())
+                        """.encode()
+                        )
                 else:
                     self.send_response(404)
                     self.end_headers()
@@ -287,7 +300,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             "redirect_uri": redirect_uri,
             "code_challenge": code_challenge,
             "code_challenge_method": "S256",
-            "state": secrets.token_urlsafe(16)
+            "state": secrets.token_urlsafe(16),
         }
 
         auth_url = f"{authorization_endpoint}?{urlencode(auth_params)}"
@@ -304,13 +317,13 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         if "error" in auth_result:
             raise AuthenticationError(
                 f"OpenShift OAuth failed: {auth_result['error']}",
-                auth_result.get("error_description", "")
+                auth_result.get("error_description", ""),
             )
 
         if "code" not in auth_result:
             raise AuthenticationError(
                 "OpenShift OAuth failed",
-                "No authorization code received (timeout or user cancelled)"
+                "No authorization code received (timeout or user cancelled)",
             )
 
         # Exchange code for token
@@ -319,15 +332,12 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             "code": auth_result["code"],
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
-            "code_verifier": code_verifier
+            "code_verifier": code_verifier,
         }
 
         try:
             response = requests.post(
-                token_endpoint,
-                data=token_data,
-                verify=self.config.verify_ssl,
-                timeout=10
+                token_endpoint, data=token_data, verify=self.config.verify_ssl, timeout=10
             )
             response.raise_for_status()
             token_response = response.json()
@@ -335,10 +345,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             self._access_token = token_response.get("access_token")
 
             if not self._access_token:
-                raise AuthenticationError(
-                    "OpenShift OAuth failed",
-                    "No access token in response"
-                )
+                raise AuthenticationError("OpenShift OAuth failed", "No access token in response")
 
             logger.info("OpenShift OAuth authentication successful")
             print("Authentication successful!\n")
@@ -346,7 +353,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         except requests.RequestException as e:
             # Try to extract OAuth error details from response
             error_detail = str(e)
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_type = error_data.get("error", "unknown_error")
@@ -357,8 +364,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
                     pass
 
             raise AuthenticationError(
-                "Failed to exchange authorization code for token",
-                error_detail
+                "Failed to exchange authorization code for token", error_detail
             ) from e
 
     def _create_api_client(self) -> ApiClient:
@@ -373,7 +379,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         if not self.config.k8s_api_host:
             raise ConfigurationError(
                 "Kubernetes API host not configured",
-                "Please provide k8s_api_host in AuthConfig when using OpenShift OAuth"
+                "Please provide k8s_api_host in AuthConfig when using OpenShift OAuth",
             )
 
         # Create configuration
@@ -402,6 +408,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
 
         try:
             import keyring
+
             service_name = f"openshift-ai-auth:{self.config.k8s_api_host}"
             username = "openshift-token"
 
@@ -428,6 +435,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
 
         try:
             import keyring
+
             service_name = f"openshift-ai-auth:{self.config.k8s_api_host}"
             username = "openshift-token"
 

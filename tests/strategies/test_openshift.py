@@ -35,13 +35,13 @@ MOCK_OAUTH_METADATA = {
 class TestOpenShiftOAuthStrategyAvailability:
     """Test availability detection for OpenShift OAuth strategy."""
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_is_available_with_explicit_token(self, mock_get):
         """Test availability with explicit token."""
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            openshift_token="sha256~test-token"
+            openshift_token="sha256~test-token",
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -55,15 +55,12 @@ class TestOpenShiftOAuthStrategyAvailability:
         # Clear other env vars that might interfere
         monkeypatch.delenv("KUBECONFIG", raising=False)
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         assert strategy.is_available() is True
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_is_available_with_valid_oauth_server(self, mock_get):
         """Test availability when OAuth server is reachable."""
         # Mock discovery response
@@ -72,10 +69,7 @@ class TestOpenShiftOAuthStrategyAvailability:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         assert strategy.is_available() is True
@@ -88,16 +82,13 @@ class TestOpenShiftOAuthStrategyAvailability:
 
         assert strategy.is_available() is False
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_is_not_available_discovery_fails(self, mock_get):
         """Test unavailability when discovery fails."""
         # Mock discovery failure
         mock_get.side_effect = Exception("Network error")
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         assert strategy.is_available() is False
@@ -106,7 +97,7 @@ class TestOpenShiftOAuthStrategyAvailability:
 class TestOpenShiftOAuthDiscovery:
     """Test OpenShift OAuth server discovery."""
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_discover_oauth_metadata_success(self, mock_get):
         """Test successful OAuth metadata discovery."""
         # Mock discovery response
@@ -115,10 +106,7 @@ class TestOpenShiftOAuthDiscovery:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         result = strategy._discover_oauth_metadata()
@@ -126,7 +114,7 @@ class TestOpenShiftOAuthDiscovery:
         assert result == MOCK_OAUTH_METADATA
         assert result["authorization_endpoint"] == MOCK_OAUTH_METADATA["authorization_endpoint"]
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_discover_oauth_metadata_cached(self, mock_get):
         """Test that discovery result is cached."""
         # Mock discovery response
@@ -135,10 +123,7 @@ class TestOpenShiftOAuthDiscovery:
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         # Call twice
@@ -149,16 +134,14 @@ class TestOpenShiftOAuthDiscovery:
         assert mock_get.call_count == 1
         assert result1 == result2
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
+    @patch("kube_authkit.strategies.openshift.requests.get")
     def test_discover_oauth_metadata_network_error(self, mock_get):
         """Test discovery handles network errors."""
         import requests
+
         mock_get.side_effect = requests.RequestException("Network error")
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         with pytest.raises(AuthenticationError) as exc_info:
@@ -175,7 +158,7 @@ class TestOpenShiftOAuthAuthentication:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            openshift_token="sha256~test-token"
+            openshift_token="sha256~test-token",
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -183,11 +166,14 @@ class TestOpenShiftOAuthAuthentication:
 
         assert api_client is not None
         assert api_client.configuration.host == "https://api.cluster.example.com:6443"
-        assert "Bearer sha256~test-token" in str(api_client.configuration.api_key.get("authorization", ""))
+        assert "Bearer sha256~test-token" in str(
+            api_client.configuration.api_key.get("authorization", "")
+        )
 
-    @patch('kube_authkit.strategies.openshift.os.getenv')
+    @patch("kube_authkit.strategies.openshift.os.getenv")
     def test_authenticate_with_env_token(self, mock_getenv):
         """Test authentication with token from environment."""
+
         def getenv_side_effect(key, default=None):
             if key == "OPENSHIFT_TOKEN":
                 return "sha256~env-token"
@@ -195,16 +181,15 @@ class TestOpenShiftOAuthAuthentication:
 
         mock_getenv.side_effect = getenv_side_effect
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         api_client = strategy.authenticate()
 
         assert api_client is not None
-        assert "Bearer sha256~env-token" in str(api_client.configuration.api_key.get("authorization", ""))
+        assert "Bearer sha256~env-token" in str(
+            api_client.configuration.api_key.get("authorization", "")
+        )
 
     def test_authenticate_not_available(self):
         """Test authenticate raises error when strategy not available."""
@@ -216,12 +201,14 @@ class TestOpenShiftOAuthAuthentication:
 
         assert "not available" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
-    @patch('kube_authkit.strategies.openshift.requests.post')
-    @patch('kube_authkit.strategies.openshift.webbrowser.open')
-    @patch('kube_authkit.strategies.openshift.HTTPServer')
-    @patch('builtins.print')
-    def test_authenticate_interactive_success(self, mock_print, mock_server_class, mock_browser, mock_post, mock_get):
+    @patch("kube_authkit.strategies.openshift.requests.get")
+    @patch("kube_authkit.strategies.openshift.requests.post")
+    @patch("kube_authkit.strategies.openshift.webbrowser.open")
+    @patch("kube_authkit.strategies.openshift.HTTPServer")
+    @patch("builtins.print")
+    def test_authenticate_interactive_success(
+        self, mock_print, mock_server_class, mock_browser, mock_post, mock_get
+    ):
         """Test successful interactive OAuth flow."""
         # Mock discovery
         mock_get_response = Mock()
@@ -238,19 +225,16 @@ class TestOpenShiftOAuthAuthentication:
         token_response.status_code = 200
         token_response.json.return_value = {
             "access_token": "sha256~oauth-token",
-            "token_type": "Bearer"
+            "token_type": "Bearer",
         }
         token_response.raise_for_status.return_value = None
         mock_post.return_value = token_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         # Manually inject auth code (simulating callback)
-        with patch.object(strategy, '_authenticate_interactive') as mock_auth:
+        with patch.object(strategy, "_authenticate_interactive") as mock_auth:
             # Simulate successful authentication
             strategy._access_token = "sha256~oauth-token"
             mock_auth.return_value = None
@@ -266,7 +250,7 @@ class TestOpenShiftOAuthKeyringIntegration:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -278,7 +262,7 @@ class TestOpenShiftOAuthKeyringIntegration:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -292,7 +276,7 @@ class TestOpenShiftOAuthKeyringIntegration:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            use_keyring=False
+            use_keyring=False,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -304,7 +288,7 @@ class TestOpenShiftOAuthKeyringIntegration:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            use_keyring=False
+            use_keyring=False,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -318,10 +302,7 @@ class TestOpenShiftOAuthApiClientCreation:
 
     def test_create_api_client_success(self):
         """Test creating ApiClient with valid configuration."""
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
         strategy._access_token = "sha256~test-token"
 
@@ -329,7 +310,9 @@ class TestOpenShiftOAuthApiClientCreation:
 
         assert api_client is not None
         assert api_client.configuration.host == "https://api.cluster.example.com:6443"
-        assert "Bearer sha256~test-token" in str(api_client.configuration.api_key.get("authorization", ""))
+        assert "Bearer sha256~test-token" in str(
+            api_client.configuration.api_key.get("authorization", "")
+        )
 
     def test_create_api_client_missing_host(self):
         """Test creating ApiClient without k8s_api_host raises error."""
@@ -350,7 +333,7 @@ class TestOpenShiftOAuthApiClientCreation:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            ca_cert=str(ca_cert)
+            ca_cert=str(ca_cert),
         )
         strategy = OpenShiftOAuthStrategy(config)
         strategy._access_token = "sha256~test-token"
@@ -365,10 +348,7 @@ class TestOpenShiftOAuthStrategyDescription:
 
     def test_get_description(self):
         """Test description."""
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         description = strategy.get_description()
@@ -380,8 +360,8 @@ class TestOpenShiftOAuthStrategyDescription:
 class TestOpenShiftOAuthInteractiveFlow:
     """Test interactive OAuth flow details."""
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
-    @patch('kube_authkit.strategies.openshift.requests.post')
+    @patch("kube_authkit.strategies.openshift.requests.get")
+    @patch("kube_authkit.strategies.openshift.requests.post")
     def test_interactive_flow_missing_endpoints(self, mock_post, mock_get):
         """Test interactive flow when endpoints are missing."""
         # Mock discovery without required endpoints
@@ -392,10 +372,7 @@ class TestOpenShiftOAuthInteractiveFlow:
         mock_get_response.raise_for_status.return_value = None
         mock_get.return_value = mock_get_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         with pytest.raises(AuthenticationError) as exc_info:
@@ -403,8 +380,8 @@ class TestOpenShiftOAuthInteractiveFlow:
 
         assert "not properly configured" in str(exc_info.value)
 
-    @patch('kube_authkit.strategies.openshift.requests.get')
-    @patch('kube_authkit.strategies.openshift.requests.post')
+    @patch("kube_authkit.strategies.openshift.requests.get")
+    @patch("kube_authkit.strategies.openshift.requests.post")
     def test_interactive_flow_token_exchange_failure(self, mock_post, mock_get):
         """Test interactive flow when token exchange fails."""
         # Mock discovery
@@ -413,10 +390,7 @@ class TestOpenShiftOAuthInteractiveFlow:
         mock_get_response.raise_for_status.return_value = None
         mock_get.return_value = mock_get_response
 
-        config = AuthConfig(
-            method="openshift",
-            k8s_api_host="https://api.cluster.example.com:6443"
-        )
+        config = AuthConfig(method="openshift", k8s_api_host="https://api.cluster.example.com:6443")
         strategy = OpenShiftOAuthStrategy(config)
 
         # We can't easily test the full interactive flow without mocking the HTTP server
@@ -424,10 +398,12 @@ class TestOpenShiftOAuthInteractiveFlow:
         metadata = strategy._discover_oauth_metadata()
         assert metadata == MOCK_OAUTH_METADATA
 
-    @patch.object(OpenShiftOAuthStrategy, 'is_available')
-    @patch.object(OpenShiftOAuthStrategy, '_load_token')
-    @patch.object(OpenShiftOAuthStrategy, '_create_api_client')
-    def test_authenticate_with_stored_token_from_keyring(self, mock_create_client, mock_load, mock_is_available):
+    @patch.object(OpenShiftOAuthStrategy, "is_available")
+    @patch.object(OpenShiftOAuthStrategy, "_load_token")
+    @patch.object(OpenShiftOAuthStrategy, "_create_api_client")
+    def test_authenticate_with_stored_token_from_keyring(
+        self, mock_create_client, mock_load, mock_is_available
+    ):
         """Test authenticate using stored token from keyring."""
         mock_is_available.return_value = True
         mock_load.return_value = "stored-sha256~token"
@@ -437,7 +413,7 @@ class TestOpenShiftOAuthInteractiveFlow:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -449,8 +425,8 @@ class TestOpenShiftOAuthInteractiveFlow:
         mock_create_client.assert_called_once()
         assert result == mock_api_client
 
-    @patch.object(OpenShiftOAuthStrategy, '_save_token')
-    @patch.object(OpenShiftOAuthStrategy, '_create_api_client')
+    @patch.object(OpenShiftOAuthStrategy, "_save_token")
+    @patch.object(OpenShiftOAuthStrategy, "_create_api_client")
     def test_authenticate_saves_token_to_keyring(self, mock_create_client, mock_save):
         """Test authenticate saves token to keyring after authentication."""
         mock_api_client = Mock()
@@ -460,7 +436,7 @@ class TestOpenShiftOAuthInteractiveFlow:
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
             openshift_token="sha256~explicit-token",
-            use_keyring=True
+            use_keyring=True,
         )
         strategy = OpenShiftOAuthStrategy(config)
 
