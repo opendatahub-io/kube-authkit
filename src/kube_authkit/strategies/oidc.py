@@ -166,6 +166,13 @@ class OIDCStrategy(AuthStrategy):
         if self._oidc_config:
             return self._oidc_config
 
+        # Validate oidc_issuer is configured
+        if not self.config.oidc_issuer:
+            raise AuthenticationError(
+                "OIDC authentication requires oidc_issuer to be configured",
+                "oidc_issuer is None",
+            )
+
         discovery_url = f"{self.config.oidc_issuer.rstrip('/')}/.well-known/openid-configuration"
         logger.debug(f"Fetching OIDC discovery document from {discovery_url}")
 

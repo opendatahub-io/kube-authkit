@@ -174,6 +174,13 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         if self._oauth_metadata:
             return self._oauth_metadata
 
+        # Validate k8s_api_host is configured
+        if not self.config.k8s_api_host:
+            raise AuthenticationError(
+                "OpenShift OAuth requires k8s_api_host to be configured",
+                "k8s_api_host is None",
+            )
+
         # Construct discovery URL
         api_host = self.config.k8s_api_host.rstrip("/")
         discovery_url = f"{api_host}/.well-known/oauth-authorization-server"
