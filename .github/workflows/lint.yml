@@ -47,7 +47,7 @@ jobs:
 
       - name: Run mypy
         run: mypy src/kube_authkit
-        continue-on-error: true
+
 
   dependency-check:
     name: Check for dependency issues
@@ -71,4 +71,3 @@ jobs:
 
       - name: Run pip-audit
         run: pip-audit
-        continue-on-error: true
