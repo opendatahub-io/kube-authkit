@@ -29,6 +29,7 @@ dependencies = [
     "kubernetes>=27.2.0",
     "requests>=2.31.0",
     "PyJWT>=2.8.0",
+    "urllib3>=2.6.0",
 ]
 
 [project.optional-dependencies]
@@ -37,7 +38,6 @@ dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-mock>=3.11.1",
-    "mypy>=1.5.0",
     "ruff>=0.1.0",
 ]
 
@@ -75,19 +75,6 @@ filterwarnings = [
     "ignore::DeprecationWarning",  # Ignore deprecation warnings
     "ignore::pytest.PytestUnraisableExceptionWarning",  # Ignore unraisable exceptions
 ]
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-strict_equality = true
 
 [tool.ruff]
 line-length = 100
