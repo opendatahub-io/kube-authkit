@@ -35,8 +35,8 @@ class TestFactoryIntegrationAutoDetection:
 
     def test_auto_detect_oidc_from_env(self, mock_oauth_server, mock_env_vars, monkeypatch):
         """Test auto-detection selects OIDC when env vars are set."""
-        monkeypatch.setenv("OIDC_ISSUER", mock_oauth_server.base_url)
-        monkeypatch.setenv("OIDC_CLIENT_ID", "test-client")
+        monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", mock_oauth_server.base_url)
+        monkeypatch.setenv("AUTHKIT_CLIENT_ID", "test-client")
         monkeypatch.delenv("KUBECONFIG", raising=False)
 
         with warnings.catch_warnings():
@@ -64,8 +64,8 @@ class TestFactoryIntegrationAutoDetection:
         # Clear all auth-related environment variables
         monkeypatch.delenv("KUBECONFIG", raising=False)
         monkeypatch.delenv("KUBERNETES_SERVICE_HOST", raising=False)
-        monkeypatch.delenv("OIDC_ISSUER", raising=False)
-        monkeypatch.delenv("OIDC_CLIENT_ID", raising=False)
+        monkeypatch.delenv("AUTHKIT_OIDC_ISSUER", raising=False)
+        monkeypatch.delenv("AUTHKIT_CLIENT_ID", raising=False)
         monkeypatch.delenv("OPENSHIFT_TOKEN", raising=False)
 
         # Mock home to a directory without .kube/config

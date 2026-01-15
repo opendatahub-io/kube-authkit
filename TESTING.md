@@ -158,9 +158,9 @@ def test_real_keycloak_auth():
     """Test authentication with real Keycloak."""
     config = AuthConfig(
         method="oidc",
-        oidc_issuer=os.getenv("OIDC_ISSUER"),
-        client_id=os.getenv("OIDC_CLIENT_ID"),
-        client_secret=os.getenv("OIDC_CLIENT_SECRET"),
+        oidc_issuer=os.getenv("AUTHKIT_OIDC_ISSUER"),
+        client_id=os.getenv("AUTHKIT_CLIENT_ID"),
+        client_secret=os.getenv("AUTHKIT_CLIENT_SECRET"),
     )
     # ... test with real server
 ```

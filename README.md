@@ -118,6 +118,32 @@ config = AuthConfig(
 api_client = get_k8s_client(config)
 ```
 
+### Advanced: Customize Client Configuration
+
+For advanced use cases where you need to customize the Kubernetes client configuration before creating the client:
+
+```python
+from kube_authkit import get_k8s_config
+from kubernetes import client
+
+# Get just the configuration (without creating ApiClient yet)
+k8s_config = get_k8s_config()
+
+# Customize configuration as needed
+k8s_config.timeout = 120  # Set custom timeout
+k8s_config.retries = 5    # Configure retries
+
+# Create client with customized configuration
+api_client = client.ApiClient(k8s_config)
+v1 = client.CoreV1Api(api_client)
+```
+
+This is useful when you need:
+- Custom timeout settings
+- Specific retry configurations
+- Multiple clients with the same authentication but different settings
+- To inspect the configuration before using it
+
 ## Configuration
 
 ### AuthConfig Options
@@ -141,10 +167,12 @@ The library respects these environment variables:
 
 - `KUBECONFIG`: Path to kubeconfig file
 - `KUBERNETES_SERVICE_HOST`: Auto-detected in-cluster (set by Kubernetes)
-- `OIDC_ISSUER`: OIDC issuer URL
-- `OIDC_CLIENT_ID`: OIDC client ID
-- `OIDC_CLIENT_SECRET`: OIDC client secret
-- `OPENSHIFT_TOKEN`: OpenShift OAuth token
+- `AUTHKIT_OIDC_ISSUER`: OIDC issuer URL
+- `AUTHKIT_CLIENT_ID`: OIDC client ID
+- `AUTHKIT_CLIENT_SECRET`: OIDC client secret
+- `AUTHKIT_TOKEN`: Bearer token for authentication
+- `AUTHKIT_API_HOST`: Kubernetes API server URL
+- `OPENSHIFT_TOKEN`: Legacy OpenShift OAuth token (use `AUTHKIT_TOKEN` instead)
 
 ## Architecture
 

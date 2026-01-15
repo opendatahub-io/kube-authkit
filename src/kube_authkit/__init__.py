@@ -23,6 +23,16 @@ For more control:
     ...     client_id="my-client"
     ... )
     >>> api_client = get_k8s_client(config)
+
+Advanced usage (customize configuration):
+    >>> from kube_authkit import get_k8s_config
+    >>> from kubernetes import client
+    >>>
+    >>> # Get just the configuration
+    >>> k8s_config = get_k8s_config()
+    >>> k8s_config.timeout = 120  # Customize timeout
+    >>> api_client = client.ApiClient(k8s_config)
+    >>> v1 = client.CoreV1Api(api_client)
 """
 
 import logging
@@ -37,15 +47,16 @@ from .exceptions import (
     StrategyNotAvailableError,
     TokenRefreshError,
 )
-from .factory import get_k8s_client
+from .factory import get_k8s_client, get_k8s_config
 
 # Version
 __version__ = "0.1.0"
 
 # Public exports
 __all__ = [
-    # Main function
+    # Main functions
     "get_k8s_client",
+    "get_k8s_config",
     # Configuration
     "AuthConfig",
     # Exceptions

@@ -9,7 +9,7 @@ based on the environment and configuration.
 import logging
 import os
 
-from kubernetes.client import ApiClient
+from kubernetes.client import ApiClient, Configuration
 
 from .config import AuthConfig
 from .exceptions import AuthenticationError, ConfigurationError
@@ -20,6 +20,53 @@ from .strategies.oidc import OIDCStrategy
 from .strategies.openshift import OpenShiftOAuthStrategy
 
 logger = logging.getLogger(__name__)
+
+
+def get_k8s_config(config: AuthConfig | None = None) -> Configuration:
+    """Get authenticated Kubernetes client configuration.
+
+    This function returns just the Configuration object, allowing users to
+    inspect or customize it before creating an ApiClient. This is useful for
+    advanced use cases where fine-grained control over the client configuration
+    is needed.
+
+    Args:
+        config: Optional AuthConfig. If None, uses auto-detection with defaults.
+
+    Returns:
+        Configured Kubernetes Configuration object with authentication set up
+
+    Raises:
+        ConfigurationError: If configuration is invalid
+        AuthenticationError: If authentication fails
+        StrategyNotAvailableError: If requested method is not available
+
+    Example:
+        >>> # Get configuration and customize before creating client
+        >>> k8s_config = get_k8s_config()
+        >>> k8s_config.timeout = 120
+        >>> api_client = ApiClient(k8s_config)
+        >>> v1 = client.CoreV1Api(api_client)
+        >>>
+        >>> # Or with explicit auth config
+        >>> auth_config = AuthConfig(method="oidc", oidc_issuer="...", client_id="...")
+        >>> k8s_config = get_k8s_config(auth_config)
+    """
+    # Use default config if none provided
+    if config is None:
+        config = AuthConfig()
+
+    logger.debug(f"Getting Kubernetes configuration with config: {config}")
+
+    # Select and execute authentication strategy
+    factory = AuthFactory(config)
+    strategy = factory.get_strategy()
+
+    logger.info(f"Using authentication strategy: {strategy.get_description()}")
+
+    # Authenticate and return Configuration
+    api_client = strategy.authenticate()
+    return api_client.configuration
 
 
 def get_k8s_client(config: AuthConfig | None = None) -> ApiClient:
@@ -48,21 +95,14 @@ def get_k8s_client(config: AuthConfig | None = None) -> ApiClient:
         >>> # Explicit configuration
         >>> config = AuthConfig(method="oidc", oidc_issuer="...", client_id="...")
         >>> api_client = get_k8s_client(config)
+
+    Note:
+        This is a convenience wrapper around get_k8s_config(). If you need to
+        customize the configuration before creating the client, use get_k8s_config()
+        instead.
     """
-    # Use default config if none provided
-    if config is None:
-        config = AuthConfig()
-
-    logger.debug(f"Getting Kubernetes client with config: {config}")
-
-    # Select and execute authentication strategy
-    factory = AuthFactory(config)
-    strategy = factory.get_strategy()
-
-    logger.info(f"Using authentication strategy: {strategy.get_description()}")
-
-    # Authenticate and return ApiClient
-    return strategy.authenticate()
+    # Get authenticated configuration and wrap in ApiClient
+    return ApiClient(get_k8s_config(config))
 
 
 class AuthFactory:
@@ -167,8 +207,8 @@ class AuthFactory:
                 return oidc_strategy
 
         # Check for OpenShift OAuth (token or k8s_api_host)
-        if self.config.openshift_token or os.getenv("OPENSHIFT_TOKEN"):
-            logger.debug("Detected OpenShift token")
+        if self.config.token or os.getenv("AUTHKIT_TOKEN") or os.getenv("OPENSHIFT_TOKEN"):
+            logger.debug("Detected authentication token")
             openshift_strategy = OpenShiftOAuthStrategy(self.config)
             if openshift_strategy.is_available():
                 logger.debug("OpenShift OAuth available")
@@ -207,7 +247,7 @@ class AuthFactory:
             True if OIDC env vars are set, False otherwise
         """
         # Check for minimal OIDC configuration in environment
-        has_issuer = os.getenv("OIDC_ISSUER") is not None
-        has_client_id = os.getenv("OIDC_CLIENT_ID") is not None
+        has_issuer = os.getenv("AUTHKIT_OIDC_ISSUER") is not None
+        has_client_id = os.getenv("AUTHKIT_CLIENT_ID") is not None
 
         return has_issuer and has_client_id

@@ -127,10 +127,11 @@ def mock_env_vars(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None
         "KUBECONFIG",
         "KUBERNETES_SERVICE_HOST",
         "KUBERNETES_SERVICE_PORT",
-        "OIDC_ISSUER",
-        "OIDC_CLIENT_ID",
-        "OIDC_CLIENT_SECRET",
-        "K8S_API_HOST",
+        "AUTHKIT_OIDC_ISSUER",
+        "AUTHKIT_CLIENT_ID",
+        "AUTHKIT_CLIENT_SECRET",
+        "AUTHKIT_API_HOST",
+        "AUTHKIT_TOKEN",
         "OPENSHIFT_TOKEN",
     ]
 
@@ -149,11 +150,11 @@ def mock_oidc_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
     Example:
         >>> def test_oidc_env(mock_oidc_env):
-        ...     assert os.getenv("OIDC_ISSUER") is not None
+        ...     assert os.getenv("AUTHKIT_OIDC_ISSUER") is not None
     """
-    monkeypatch.setenv("OIDC_ISSUER", "https://keycloak.example.com/auth/realms/test")
-    monkeypatch.setenv("OIDC_CLIENT_ID", "test-client")
-    monkeypatch.setenv("OIDC_CLIENT_SECRET", "test-secret")
+    monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", "https://keycloak.example.com/auth/realms/test")
+    monkeypatch.setenv("AUTHKIT_CLIENT_ID", "test-client")
+    monkeypatch.setenv("AUTHKIT_CLIENT_SECRET", "test-secret")
 
 
 # Integration testing fixtures
