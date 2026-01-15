@@ -26,7 +26,7 @@ class TestOpenShiftIntegrationAuthentication:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                openshift_token="sha256~explicit-test-token",
+                token="sha256~explicit-test-token",
                 verify_ssl=False,
             )
 
@@ -92,7 +92,7 @@ class TestOpenShiftIntegrationAuthentication:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                openshift_token="sha256~test-token",
+                token="sha256~test-token",
                 verify_ssl=False,
             )
 
@@ -209,7 +209,7 @@ class TestOpenShiftIntegrationSSL:
             config = AuthConfig(
                 method="openshift",
                 k8s_api_host="https://api.openshift.example.com:6443",
-                openshift_token="sha256~test-token",
+                token="sha256~test-token",
                 verify_ssl=False,
             )
 

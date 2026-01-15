@@ -64,7 +64,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         >>> config = AuthConfig(
         ...     method="openshift",
         ...     k8s_api_host="https://api.cluster.example.com:6443",
-        ...     openshift_token="sha256~..."
+        ...     token="sha256~..."
         ... )
         >>> strategy = OpenShiftOAuthStrategy(config)
         >>> api_client = strategy.authenticate()
@@ -91,13 +91,13 @@ class OpenShiftOAuthStrategy(AuthStrategy):
             return False
 
         # Check for explicit token
-        if self.config.openshift_token:
-            logger.debug("OpenShift token provided explicitly")
+        if self.config.token:
+            logger.debug("Token provided explicitly")
             return True
 
-        # Check environment variable
-        if os.getenv("OPENSHIFT_TOKEN"):
-            logger.debug("OpenShift token found in OPENSHIFT_TOKEN environment variable")
+        # Check environment variable (support AUTHKIT_TOKEN and legacy OPENSHIFT_TOKEN)
+        if os.getenv("AUTHKIT_TOKEN") or os.getenv("OPENSHIFT_TOKEN"):
+            logger.debug("Token found in environment variable")
             return True
 
         # Try to discover OAuth server
@@ -135,12 +135,15 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         logger.info(f"Authenticating via OpenShift OAuth to {self.config.k8s_api_host}")
 
         # Check for explicit token
-        if self.config.openshift_token:
-            self._access_token = self.config.openshift_token
-            logger.info("Using explicitly provided OpenShift token")
+        if self.config.token:
+            self._access_token = self.config.token
+            logger.info("Using explicitly provided token")
+        elif os.getenv("AUTHKIT_TOKEN"):
+            self._access_token = os.getenv("AUTHKIT_TOKEN")
+            logger.info("Using token from AUTHKIT_TOKEN environment variable")
         elif os.getenv("OPENSHIFT_TOKEN"):
             self._access_token = os.getenv("OPENSHIFT_TOKEN")
-            logger.info("Using OpenShift token from OPENSHIFT_TOKEN environment variable")
+            logger.info("Using token from OPENSHIFT_TOKEN environment variable (legacy)")
         else:
             # Try to load stored token
             if self.config.use_keyring:

@@ -47,10 +47,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       # Point to Keycloak running in Docker
-      OIDC_ISSUER: http://keycloak:8080/realms/test
-      OIDC_CLIENT_ID: test-client
-      OIDC_CLIENT_SECRET: test-secret
-      K8S_API_HOST: https://mock-k8s-api:6443
+      AUTHKIT_OIDC_ISSUER: http://keycloak:8080/realms/test
+      AUTHKIT_CLIENT_ID: test-client
+      AUTHKIT_CLIENT_SECRET: test-secret
+      AUTHKIT_API_HOST: https://mock-k8s-api:6443
       # Skip SSL verification for test environment
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1

@@ -41,7 +41,7 @@ class TestOpenShiftOAuthStrategyAvailability:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            openshift_token="sha256~test-token",
+            token="sha256~test-token",
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -158,7 +158,7 @@ class TestOpenShiftOAuthAuthentication:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            openshift_token="sha256~test-token",
+            token="sha256~test-token",
         )
         strategy = OpenShiftOAuthStrategy(config)
 
@@ -435,7 +435,7 @@ class TestOpenShiftOAuthInteractiveFlow:
         config = AuthConfig(
             method="openshift",
             k8s_api_host="https://api.cluster.example.com:6443",
-            openshift_token="sha256~explicit-token",
+            token="sha256~explicit-token",
             use_keyring=True,
         )
         strategy = OpenShiftOAuthStrategy(config)

@@ -31,7 +31,7 @@ class AuthConfig:
         oidc_issuer: OIDC issuer URL (required for OIDC)
         client_id: OIDC client ID (required for OIDC)
         client_secret: OIDC client secret (for confidential clients)
-        openshift_token: OpenShift OAuth token (for OpenShift method)
+        token: Bearer token for authentication (optional, for OIDC/OpenShift)
         scopes: OIDC scopes to request
         use_device_flow: Use Device Code Flow instead of Authorization Code
         use_keyring: Store refresh tokens in system keyring
@@ -58,7 +58,7 @@ class AuthConfig:
     oidc_issuer: str | None = None
     client_id: str | None = None
     client_secret: str | None = None
-    openshift_token: str | None = None
+    token: str | None = None
     scopes: list[str] = field(default_factory=lambda: ["openid"])
     use_device_flow: bool = False
     use_keyring: bool = False
@@ -152,34 +152,34 @@ class AuthConfig:
         modifying code.
 
         Environment Variables:
-            OIDC_ISSUER: OIDC issuer URL
-            OIDC_CLIENT_ID: OIDC client ID
-            OIDC_CLIENT_SECRET: OIDC client secret
-            OPENSHIFT_TOKEN: OpenShift OAuth token
-            KUBECONFIG: Path to kubeconfig file
-            K8S_API_HOST: Kubernetes API server URL
+            AUTHKIT_OIDC_ISSUER: OIDC issuer URL
+            AUTHKIT_CLIENT_ID: OIDC client ID
+            AUTHKIT_CLIENT_SECRET: OIDC client secret
+            AUTHKIT_TOKEN: Bearer token for authentication
+            AUTHKIT_API_HOST: Kubernetes API server URL
+            KUBECONFIG: Path to kubeconfig file (standard Kubernetes variable)
         """
         # Load OIDC configuration from environment
         if not self.oidc_issuer:
-            self.oidc_issuer = os.getenv("OIDC_ISSUER")
+            self.oidc_issuer = os.getenv("AUTHKIT_OIDC_ISSUER")
 
         if not self.client_id:
-            self.client_id = os.getenv("OIDC_CLIENT_ID")
+            self.client_id = os.getenv("AUTHKIT_CLIENT_ID")
 
         if not self.client_secret:
-            self.client_secret = os.getenv("OIDC_CLIENT_SECRET")
+            self.client_secret = os.getenv("AUTHKIT_CLIENT_SECRET")
 
-        # Load OpenShift token from environment
-        if not self.openshift_token:
-            self.openshift_token = os.getenv("OPENSHIFT_TOKEN")
+        # Load token from environment (support legacy OPENSHIFT_TOKEN)
+        if not self.token:
+            self.token = os.getenv("AUTHKIT_TOKEN") or os.getenv("OPENSHIFT_TOKEN")
 
-        # Load kubeconfig path from environment
+        # Load kubeconfig path from environment (standard Kubernetes variable)
         if not self.kubeconfig_path:
             self.kubeconfig_path = os.getenv("KUBECONFIG")
 
         # Load API host from environment
         if not self.k8s_api_host:
-            self.k8s_api_host = os.getenv("K8S_API_HOST")
+            self.k8s_api_host = os.getenv("AUTHKIT_API_HOST")
 
         # Validate callback port
         if self.oidc_callback_port < 1 or self.oidc_callback_port > 65535:
@@ -204,7 +204,7 @@ class AuthConfig:
             "oidc_issuer": self.oidc_issuer,
             "client_id": self.client_id,
             "client_secret": "***REDACTED***" if self.client_secret else None,
-            "openshift_token": "***REDACTED***" if self.openshift_token else None,
+            "token": "***REDACTED***" if self.token else None,
             "scopes": self.scopes,
             "use_device_flow": self.use_device_flow,
             "use_keyring": self.use_keyring,
