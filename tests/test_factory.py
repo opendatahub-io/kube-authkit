@@ -291,15 +291,15 @@ class TestGetK8sConfig:
         # Get configuration
         k8s_config = get_k8s_config(config)
 
-        # Customize it
-        original_timeout = k8s_config.timeout
-        k8s_config.timeout = 120
+        # Customize it - use actual Configuration attributes
+        original_debug = k8s_config.debug
+        k8s_config.debug = True
 
         # Create client with customized config
         api_client = ApiClient(k8s_config)
 
-        assert k8s_config.timeout == 120
-        assert k8s_config.timeout != original_timeout
+        assert k8s_config.debug is True
+        assert k8s_config.debug != original_debug
         assert api_client is not None
 
     def test_get_k8s_config_with_default_config(self, mock_kubeconfig, monkeypatch):
@@ -396,9 +396,7 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "from-env-client")
 
         # Explicit config should take precedence
-        config = AuthConfig(
-            oidc_issuer="https://explicit.example.com", client_id="explicit-client"
-        )
+        config = AuthConfig(oidc_issuer="https://explicit.example.com", client_id="explicit-client")
 
         assert config.oidc_issuer == "https://explicit.example.com"
         assert config.client_id == "explicit-client"

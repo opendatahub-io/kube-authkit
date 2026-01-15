@@ -44,7 +44,7 @@ def get_k8s_config(config: AuthConfig | None = None) -> Configuration:
     Example:
         >>> # Get configuration and customize before creating client
         >>> k8s_config = get_k8s_config()
-        >>> k8s_config.timeout = 120
+        >>> k8s_config.debug = True  # Enable debug logging
         >>> api_client = ApiClient(k8s_config)
         >>> v1 = client.CoreV1Api(api_client)
         >>>

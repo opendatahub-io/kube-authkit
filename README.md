@@ -130,8 +130,8 @@ from kubernetes import client
 k8s_config = get_k8s_config()
 
 # Customize configuration as needed
-k8s_config.timeout = 120  # Set custom timeout
-k8s_config.retries = 5    # Configure retries
+k8s_config.debug = True        # Enable debug logging
+k8s_config.verify_ssl = False  # Disable SSL verification (dev only)
 
 # Create client with customized configuration
 api_client = client.ApiClient(k8s_config)
@@ -139,8 +139,8 @@ v1 = client.CoreV1Api(api_client)
 ```
 
 This is useful when you need:
-- Custom timeout settings
-- Specific retry configurations
+- Custom debug settings
+- SSL/TLS configuration
 - Multiple clients with the same authentication but different settings
 - To inspect the configuration before using it
 

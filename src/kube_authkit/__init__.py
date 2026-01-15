@@ -30,7 +30,7 @@ Advanced usage (customize configuration):
     >>>
     >>> # Get just the configuration
     >>> k8s_config = get_k8s_config()
-    >>> k8s_config.timeout = 120  # Customize timeout
+    >>> k8s_config.debug = True  # Enable debug mode
     >>> api_client = client.ApiClient(k8s_config)
     >>> v1 = client.CoreV1Api(api_client)
 """
