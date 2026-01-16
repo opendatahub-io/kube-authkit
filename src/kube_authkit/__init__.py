@@ -50,7 +50,7 @@ from .exceptions import (
 from .factory import get_k8s_client, get_k8s_config
 
 # Version
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Public exports
 __all__ = [
