@@ -39,6 +39,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
       - name: Install pip-audit
         run: pip install pip-audit
 
