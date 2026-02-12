@@ -183,7 +183,7 @@ class InClusterStrategy(AuthStrategy):
         """
         try:
             return TOKEN_PATH.read_text().strip()
-        except (OSError, IOError) as e:
+        except OSError as e:
             raise AuthenticationError(
                 "Failed to read service account token",
                 f"Could not read token from {TOKEN_PATH}: {e}",
