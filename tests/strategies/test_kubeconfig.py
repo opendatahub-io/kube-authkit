@@ -192,6 +192,56 @@ class TestKubeConfigStrategyAuthentication:
         assert "Unexpected error" in str(exc_info.value)
 
 
+class TestKubeConfigGetToken:
+    """Test get_token() method."""
+
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
+    @patch("kube_authkit.strategies.kubeconfig.client.ApiClient")
+    def test_get_token_returns_bearer_token(self, mock_api_client, mock_load_config, mock_kubeconfig):
+        """Test get_token returns token from config after authenticate."""
+        mock_client_instance = MagicMock()
+        mock_client_instance.configuration.api_key = {
+            "authorization": "Bearer test-bearer-token"
+        }
+        mock_api_client.return_value = mock_client_instance
+
+        config = AuthConfig(method="kubeconfig", kubeconfig_path=str(mock_kubeconfig))
+        strategy = KubeConfigStrategy(config)
+
+        strategy.authenticate()
+        token = strategy.get_token()
+
+        assert token == "test-bearer-token"
+
+    def test_get_token_raises_before_authenticate(self):
+        """Test get_token raises AuthenticationError before authenticate."""
+        config = AuthConfig(method="kubeconfig")
+        strategy = KubeConfigStrategy(config)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            strategy.get_token()
+
+        assert "No token available" in str(exc_info.value)
+
+    @patch("kube_authkit.strategies.kubeconfig.k8s_config.load_kube_config")
+    @patch("kube_authkit.strategies.kubeconfig.client.ApiClient")
+    def test_get_token_raises_for_cert_auth(self, mock_api_client, mock_load_config, mock_kubeconfig):
+        """Test get_token raises AuthenticationError for cert-based auth."""
+        mock_client_instance = MagicMock()
+        mock_client_instance.configuration.api_key = {}
+        mock_api_client.return_value = mock_client_instance
+
+        config = AuthConfig(method="kubeconfig", kubeconfig_path=str(mock_kubeconfig))
+        strategy = KubeConfigStrategy(config)
+
+        strategy.authenticate()
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            strategy.get_token()
+
+        assert "No bearer token available in kubeconfig" in str(exc_info.value)
+
+
 class TestKubeConfigStrategyPathResolution:
     """Test kubeconfig path resolution logic."""
 

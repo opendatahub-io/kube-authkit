@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from kubernetes.client import ApiClient
 
 from ..config import AuthConfig
+from ..exceptions import AuthenticationError
 
 
 class AuthStrategy(ABC):
@@ -83,6 +84,23 @@ class AuthStrategy(ABC):
             >>> pods = v1.list_pod_for_all_namespaces()
         """
         pass
+
+    def get_token(self) -> str:
+        """Return the raw access/bearer token string.
+
+        Strategies that support token retrieval should override this method.
+        Must be called after authenticate().
+
+        Returns:
+            Raw bearer token string
+
+        Raises:
+            AuthenticationError: If no token is available
+        """
+        raise AuthenticationError(
+            f"{self.__class__.__name__} does not support get_token()",
+            "Call authenticate() first or use a token-based strategy.",
+        )
 
     def refresh_if_needed(self) -> None:
         """Refresh authentication token if needed.

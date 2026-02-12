@@ -617,6 +617,22 @@ class OIDCStrategy(AuthStrategy):
         except Exception as e:
             logger.warning(f"Failed to save refresh token to keyring: {e}")
 
+    def get_token(self) -> str:
+        """Return the raw OIDC access token string.
+
+        Returns:
+            Raw bearer token string
+
+        Raises:
+            AuthenticationError: If no access token is available
+        """
+        if not self._access_token:
+            raise AuthenticationError(
+                "No access token available",
+                "Call authenticate() before get_token().",
+            )
+        return self._access_token
+
     def get_description(self) -> str:
         """Get description of this strategy.
 

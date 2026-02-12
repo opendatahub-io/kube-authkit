@@ -47,7 +47,7 @@ from .exceptions import (
     StrategyNotAvailableError,
     TokenRefreshError,
 )
-from .factory import get_k8s_client, get_k8s_config
+from .factory import get_k8s_client, get_k8s_config, get_token
 
 # Version
 __version__ = "0.2.0"
@@ -57,6 +57,7 @@ __all__ = [
     # Main functions
     "get_k8s_client",
     "get_k8s_config",
+    "get_token",
     # Configuration
     "AuthConfig",
     # Exceptions

@@ -8,11 +8,11 @@ Tests cover:
 - get_k8s_client() function
 """
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from kube_authkit import AuthConfig, get_k8s_client, get_k8s_config
+from kube_authkit import AuthConfig, get_k8s_client, get_k8s_config, get_token
 from kube_authkit.exceptions import AuthenticationError, ConfigurationError
 from kube_authkit.factory import AuthFactory
 from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
@@ -45,6 +45,48 @@ class TestGetK8sClient:
         # This will fail because kubeconfig is not available
         with pytest.raises(ConfigurationError):
             get_k8s_client(config)
+
+
+class TestGetToken:
+    """Test the top-level get_token() function."""
+
+    @patch("kube_authkit.factory.AuthFactory.get_strategy")
+    def test_get_token_success(self, mock_get_strategy):
+        """Test get_token returns token from strategy."""
+        mock_strategy = Mock()
+        mock_strategy.authenticate.return_value = Mock()
+        mock_strategy.get_token.return_value = "test-bearer-token"
+        mock_get_strategy.return_value = mock_strategy
+
+        token = get_token(AuthConfig())
+
+        assert token == "test-bearer-token"
+        mock_strategy.authenticate.assert_called_once()
+        mock_strategy.get_token.assert_called_once()
+
+    @patch("kube_authkit.factory.AuthFactory.get_strategy")
+    def test_get_token_with_default_config(self, mock_get_strategy):
+        """Test get_token with no arguments uses default config."""
+        mock_strategy = Mock()
+        mock_strategy.authenticate.return_value = Mock()
+        mock_strategy.get_token.return_value = "default-token"
+        mock_get_strategy.return_value = mock_strategy
+
+        token = get_token()
+
+        assert token == "default-token"
+
+    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
+    @patch("kube_authkit.strategies.incluster.InClusterStrategy.is_available")
+    def test_get_token_raises_when_no_auth(
+        self, mock_incluster_avail, mock_kube_avail, mock_env_vars
+    ):
+        """Test get_token raises when no auth method available."""
+        mock_incluster_avail.return_value = False
+        mock_kube_avail.return_value = False
+
+        with pytest.raises(AuthenticationError):
+            get_token()
 
 
 class TestAuthFactoryStrategySelection:

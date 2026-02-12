@@ -863,6 +863,36 @@ class TestOIDCApiClientCreation:
         assert api_client.configuration.ssl_ca_cert == str(ca_cert)
 
 
+class TestOIDCGetToken:
+    """Test get_token() method."""
+
+    def test_get_token_returns_access_token(self):
+        """Test get_token returns access token after authenticate."""
+        config = AuthConfig(
+            method="oidc",
+            oidc_issuer="https://keycloak.example.com/auth/realms/test",
+            client_id="test-client",
+        )
+        strategy = OIDCStrategy(config)
+        strategy._access_token = "test-access-token"
+
+        assert strategy.get_token() == "test-access-token"
+
+    def test_get_token_raises_before_authenticate(self):
+        """Test get_token raises AuthenticationError before authenticate."""
+        config = AuthConfig(
+            method="oidc",
+            oidc_issuer="https://keycloak.example.com/auth/realms/test",
+            client_id="test-client",
+        )
+        strategy = OIDCStrategy(config)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            strategy.get_token()
+
+        assert "No access token available" in str(exc_info.value)
+
+
 class TestOIDCStrategyDescription:
     """Test strategy description."""
 

@@ -9,6 +9,7 @@ Tests cover:
 import pytest
 
 from kube_authkit import AuthConfig
+from kube_authkit.exceptions import AuthenticationError
 from kube_authkit.strategies.base import AuthStrategy
 
 
@@ -59,6 +60,16 @@ class TestAuthStrategyAbstractMethods:
 
         with pytest.raises(NotImplementedError):
             strategy.refresh_if_needed()
+
+    def test_get_token_not_implemented(self):
+        """Test get_token raises AuthenticationError by default."""
+        config = AuthConfig()
+        strategy = ConcreteStrategy(config)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            strategy.get_token()
+
+        assert "does not support get_token()" in str(exc_info.value)
 
     def test_get_description_default(self):
         """Test get_description returns class name by default."""

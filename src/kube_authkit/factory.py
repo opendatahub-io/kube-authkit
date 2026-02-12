@@ -105,6 +105,31 @@ def get_k8s_client(config: AuthConfig | None = None) -> ApiClient:
     return ApiClient(get_k8s_config(config))
 
 
+def get_token(config: AuthConfig | None = None) -> str:
+    """Get raw authentication token.
+
+    Authenticates using the selected strategy and returns the raw bearer
+    token string. This is useful for consumers that need the token itself
+    rather than a pre-configured Kubernetes client (e.g., Feast).
+
+    Args:
+        config: Optional AuthConfig. If None, uses auto-detection with defaults.
+
+    Returns:
+        Raw bearer token string
+
+    Raises:
+        ConfigurationError: If configuration is invalid
+        AuthenticationError: If authentication fails or no token is available
+    """
+    if config is None:
+        config = AuthConfig()
+    factory = AuthFactory(config)
+    strategy = factory.get_strategy()
+    strategy.authenticate()
+    return strategy.get_token()
+
+
 class AuthFactory:
     """Factory for selecting and creating authentication strategies.
 
