@@ -322,9 +322,7 @@ class TestInClusterGetToken:
         config = AuthConfig(method="incluster")
         strategy = InClusterStrategy(config)
 
-        with patch(
-            "kube_authkit.strategies.incluster.TOKEN_PATH", Path("/nonexistent/token")
-        ):
+        with patch("kube_authkit.strategies.incluster.TOKEN_PATH", Path("/nonexistent/token")):
             with pytest.raises(AuthenticationError) as exc_info:
                 strategy.get_token()
 
