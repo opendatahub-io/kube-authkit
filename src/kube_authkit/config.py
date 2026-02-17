@@ -21,12 +21,13 @@ class AuthConfig:
     methods and can be configured explicitly or through environment variables.
 
     Args:
-        method: Authentication method to use. Options:
-            - "auto": Auto-detect best method (default)
+        method: Authentication method to use. Must be specified. Options:
+            - "auto": Auto-detect best method by probing the environment
             - "kubeconfig": Use ~/.kube/config or KUBECONFIG
             - "incluster": Use in-cluster service account
             - "oidc": Use OpenID Connect
             - "openshift": Use OpenShift OAuth
+            - None (default): Raises ConfigurationError; caller must choose
         k8s_api_host: Kubernetes API server URL (auto-detected if None)
         oidc_issuer: OIDC issuer URL (required for OIDC)
         client_id: OIDC client ID (required for OIDC)
@@ -41,9 +42,6 @@ class AuthConfig:
         kubeconfig_path: Path to kubeconfig file (overrides KUBECONFIG env var)
 
     Example:
-        >>> # Auto-detection (simplest)
-        >>> config = AuthConfig()
-        >>>
         >>> # Explicit OIDC with device flow
         >>> config = AuthConfig(
         ...     method="oidc",
@@ -51,9 +49,12 @@ class AuthConfig:
         ...     client_id="my-client",
         ...     use_device_flow=True
         ... )
+        >>>
+        >>> # Auto-detection (opt-in)
+        >>> config = AuthConfig(method="auto")
     """
 
-    method: str = "auto"
+    method: str | None = None
     k8s_api_host: str | None = None
     oidc_issuer: str | None = None
     client_id: str | None = None
@@ -80,6 +81,15 @@ class AuthConfig:
         """
         # Load from environment variables if not explicitly set
         self._load_from_environment()
+
+        # Validate that method is specified
+        if self.method is None:
+            raise ConfigurationError(
+                "Authentication method must be specified",
+                "Provide method='auto' to auto-detect, or specify an explicit method "
+                "(e.g., method='kubeconfig', method='oidc', method='incluster', "
+                "method='openshift')",
+            )
 
         # Normalize method name
         self.method = self.method.lower()
