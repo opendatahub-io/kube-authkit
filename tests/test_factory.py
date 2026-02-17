@@ -427,7 +427,9 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "from-env-client")
 
         # Explicit config should take precedence
-        config = AuthConfig(method="auto", oidc_issuer="https://explicit.example.com", client_id="explicit-client")
+        config = AuthConfig(
+            method="auto", oidc_issuer="https://explicit.example.com", client_id="explicit-client"
+        )
 
         assert config.oidc_issuer == "https://explicit.example.com"
         assert config.client_id == "explicit-client"
