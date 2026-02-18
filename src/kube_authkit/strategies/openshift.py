@@ -296,9 +296,10 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         server_thread.start()
 
         # Build authorization URL
-        # OpenShift uses 'openshift-browser-client' for browser-based flows
+        # Use configured client_id, or fall back to OpenShift's default browser client
+        oauth_client_id = self.config.client_id or "openshift-browser-client"
         auth_params = {
-            "client_id": "openshift-browser-client",
+            "client_id": oauth_client_id,
             "response_type": "code",
             "redirect_uri": redirect_uri,
             "code_challenge": code_challenge,
@@ -331,7 +332,7 @@ class OpenShiftOAuthStrategy(AuthStrategy):
 
         # Exchange code for token
         token_data = {
-            "client_id": "openshift-browser-client",
+            "client_id": oauth_client_id,
             "code": auth_result["code"],
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
