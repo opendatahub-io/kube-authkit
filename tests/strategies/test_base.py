@@ -63,7 +63,7 @@ class TestAuthStrategyAbstractMethods:
 
     def test_get_token_not_implemented(self):
         """Test get_token raises AuthenticationError by default."""
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         strategy = ConcreteStrategy(config)
 
         with pytest.raises(AuthenticationError) as exc_info:
