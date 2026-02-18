@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kube-authkit"
-version = "0.3.0"
+version = "0.4.0"
 description = "Unified Kubernetes authentication toolkit - supports KubeConfig, In-Cluster, OIDC, and OpenShift OAuth authentication"
 readme = "README.md"
 license = {text = "Apache-2.0"}
