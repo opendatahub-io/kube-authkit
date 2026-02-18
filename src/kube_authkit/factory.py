@@ -31,26 +31,26 @@ def get_k8s_config(config: AuthConfig | None = None) -> Configuration:
     is needed.
 
     Args:
-        config: Optional AuthConfig. If None, uses auto-detection with defaults.
+        config: AuthConfig instance. Must specify a method.
+            If None, raises ConfigurationError.
 
     Returns:
         Configured Kubernetes Configuration object with authentication set up
 
     Raises:
-        ConfigurationError: If configuration is invalid
+        ConfigurationError: If configuration is invalid or method not specified
         AuthenticationError: If authentication fails
         StrategyNotAvailableError: If requested method is not available
 
     Example:
-        >>> # Get configuration and customize before creating client
-        >>> k8s_config = get_k8s_config()
-        >>> k8s_config.debug = True  # Enable debug logging
-        >>> api_client = ApiClient(k8s_config)
-        >>> v1 = client.CoreV1Api(api_client)
-        >>>
-        >>> # Or with explicit auth config
+        >>> # Explicit auth config
         >>> auth_config = AuthConfig(method="oidc", oidc_issuer="...", client_id="...")
         >>> k8s_config = get_k8s_config(auth_config)
+        >>> k8s_config.debug = True  # Enable debug logging
+        >>> api_client = ApiClient(k8s_config)
+        >>>
+        >>> # Auto-detection (opt-in)
+        >>> k8s_config = get_k8s_config(AuthConfig(method="auto"))
     """
     # Use default config if none provided
     if config is None:
@@ -77,24 +77,25 @@ def get_k8s_client(config: AuthConfig | None = None) -> ApiClient:
     then returns a ready-to-use Kubernetes ApiClient.
 
     Args:
-        config: Optional AuthConfig. If None, uses auto-detection with defaults.
+        config: AuthConfig instance. Must specify a method.
+            If None, raises ConfigurationError.
 
     Returns:
         Configured Kubernetes ApiClient ready to make API calls
 
     Raises:
-        ConfigurationError: If configuration is invalid
+        ConfigurationError: If configuration is invalid or method not specified
         AuthenticationError: If authentication fails
         StrategyNotAvailableError: If requested method is not available
 
     Example:
-        >>> # Auto-detection (simplest)
-        >>> api_client = get_k8s_client()
-        >>> v1 = client.CoreV1Api(api_client)
-        >>>
         >>> # Explicit configuration
         >>> config = AuthConfig(method="oidc", oidc_issuer="...", client_id="...")
         >>> api_client = get_k8s_client(config)
+        >>> v1 = client.CoreV1Api(api_client)
+        >>>
+        >>> # Auto-detection (opt-in)
+        >>> api_client = get_k8s_client(AuthConfig(method="auto"))
 
     Note:
         This is a convenience wrapper around get_k8s_config(). If you need to

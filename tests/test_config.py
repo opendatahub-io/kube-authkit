@@ -21,9 +21,16 @@ from kube_authkit.exceptions import ConfigurationError
 class TestAuthConfigDefaults:
     """Test default values and initialization."""
 
-    def test_default_config(self, mock_env_vars):
-        """Test AuthConfig with all defaults."""
-        config = AuthConfig()
+    def test_default_method_is_none(self, mock_env_vars):
+        """Test AuthConfig with no method raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig()
+
+        assert "Authentication method must be specified" in str(exc_info.value)
+
+    def test_auto_method_config(self, mock_env_vars):
+        """Test AuthConfig with method='auto'."""
+        config = AuthConfig(method="auto")
         assert config.method == "auto"
         assert config.verify_ssl is True
         assert config.use_device_flow is False
@@ -90,14 +97,14 @@ class TestAuthConfigValidation:
     def test_invalid_ca_cert_path(self, mock_env_vars):
         """Test that invalid CA cert path raises ConfigurationError."""
         with pytest.raises(ConfigurationError) as exc_info:
-            AuthConfig(ca_cert="/nonexistent/ca.crt")
+            AuthConfig(method="auto", ca_cert="/nonexistent/ca.crt")
 
         assert "CA certificate file not found" in str(exc_info.value)
 
     def test_invalid_kubeconfig_path(self, mock_env_vars):
         """Test that invalid kubeconfig path raises ConfigurationError."""
         with pytest.raises(ConfigurationError) as exc_info:
-            AuthConfig(kubeconfig_path="/nonexistent/config")
+            AuthConfig(method="auto", kubeconfig_path="/nonexistent/config")
 
         assert "Kubeconfig file not found" in str(exc_info.value)
 
@@ -117,12 +124,12 @@ class TestAuthConfigValidation:
 
     def test_valid_callback_port(self, mock_env_vars):
         """Test that valid callback port is accepted."""
-        config = AuthConfig(oidc_callback_port=3000)
+        config = AuthConfig(method="auto", oidc_callback_port=3000)
         assert config.oidc_callback_port == 3000
 
     def test_default_callback_port(self, mock_env_vars):
         """Test that default callback port is 8080."""
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         assert config.oidc_callback_port == 8080
 
 
@@ -151,7 +158,7 @@ class TestAuthConfigEnvironmentVariables:
         Path(kubeconfig_path).write_text("test")
 
         monkeypatch.setenv("KUBECONFIG", kubeconfig_path)
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         assert config.kubeconfig_path == kubeconfig_path
 
 
@@ -162,7 +169,7 @@ class TestAuthConfigSecurityWarnings:
         """Test that verify_ssl=False emits security warning."""
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            AuthConfig(verify_ssl=False)
+            AuthConfig(method="auto", verify_ssl=False)
 
             assert len(w) == 1
             assert issubclass(w[0].category, SecurityWarning)
@@ -200,7 +207,7 @@ class TestAuthConfigSensitiveDataHandling:
 
     def test_repr_without_secret(self, mock_env_vars):
         """Test __repr__ when no secret is set."""
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         repr_str = repr(config)
         assert "AuthConfig" in repr_str
 
@@ -229,6 +236,37 @@ class TestAuthConfigFromDict:
         config = AuthConfig.from_dict(config_dict)
         assert config.method == "auto"
         # Should not raise an error
+
+
+class TestMethodRequired:
+    """Test that method must be explicitly specified."""
+
+    def test_method_defaults_to_none(self, mock_env_vars):
+        """Test that method defaults to None and raises."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig()
+
+        assert "Authentication method must be specified" in str(exc_info.value)
+
+    def test_method_auto_is_valid(self, mock_env_vars):
+        """Test that method='auto' is accepted."""
+        config = AuthConfig(method="auto")
+        assert config.method == "auto"
+
+    def test_explicit_method_is_valid(self, mock_env_vars):
+        """Test that an explicit method is accepted."""
+        config = AuthConfig(method="kubeconfig")
+        assert config.method == "kubeconfig"
+
+    def test_from_dict_without_method_raises(self, mock_env_vars):
+        """Test that from_dict without method raises ConfigurationError."""
+        with pytest.raises(ConfigurationError):
+            AuthConfig.from_dict({})
+
+    def test_from_dict_with_method_works(self, mock_env_vars):
+        """Test that from_dict with method works."""
+        config = AuthConfig.from_dict({"method": "kubeconfig"})
+        assert config.method == "kubeconfig"
 
 
 class TestAuthConfigMethodNormalization:

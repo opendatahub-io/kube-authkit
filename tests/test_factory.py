@@ -21,18 +21,12 @@ from kube_authkit.strategies.openshift import OpenShiftOAuthStrategy
 class TestGetK8sClient:
     """Test the main get_k8s_client() entry point."""
 
-    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
-    @patch("kube_authkit.strategies.incluster.InClusterStrategy.is_available")
-    def test_with_default_config(self, mock_incluster_avail, mock_kube_avail, mock_env_vars):
-        """Test get_k8s_client with no arguments raises error when no auth available."""
-        # Mock both strategies as unavailable
-        mock_incluster_avail.return_value = False
-        mock_kube_avail.return_value = False
-
-        with pytest.raises(AuthenticationError) as exc_info:
+    def test_with_default_config_raises(self, mock_env_vars):
+        """Test get_k8s_client with no arguments raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
             get_k8s_client()
 
-        assert "No authentication method available" in str(exc_info.value)
+        assert "Authentication method must be specified" in str(exc_info.value)
 
     @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
     def test_with_explicit_config(self, mock_is_available, mock_env_vars):
@@ -92,7 +86,7 @@ class TestAuthFactoryAutoDetection:
         mock_incluster_avail.return_value = False
         mock_kube_avail.return_value = False
 
-        config = AuthConfig()  # method="auto" by default
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         # OIDC env vars are set, but OIDC strategy not yet implemented
@@ -114,7 +108,7 @@ class TestAuthFactoryAutoDetection:
         mock_incluster_avail.return_value = False
         mock_kube_avail.return_value = False
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         with pytest.raises(AuthenticationError) as exc_info:
@@ -130,7 +124,7 @@ class TestAuthFactoryAutoDetection:
         """Test auto-detection selects KubeConfig when available."""
         mock_is_available.return_value = True
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
         strategy = factory.get_strategy()
 
@@ -144,7 +138,7 @@ class TestAuthFactoryAutoDetection:
         """Test auto-detection selects InCluster when available."""
         mock_is_available.return_value = True
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
         strategy = factory.get_strategy()
 
@@ -161,7 +155,7 @@ class TestAuthFactoryAutoDetection:
         mock_incluster_avail.return_value = True
         mock_kube_avail.return_value = True
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
         strategy = factory.get_strategy()
 
@@ -176,14 +170,14 @@ class TestAuthFactoryHasOIDCEnvVars:
 
     def test_has_oidc_env_vars_true(self, mock_oidc_env):
         """Test detection when OIDC env vars are present."""
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         assert factory._has_oidc_env_vars() is True
 
     def test_has_oidc_env_vars_false(self, mock_env_vars):
         """Test detection when OIDC env vars are absent."""
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         assert factory._has_oidc_env_vars() is False
@@ -193,7 +187,7 @@ class TestAuthFactoryHasOIDCEnvVars:
         monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", "https://test.example.com")
         # Missing AUTHKIT_CLIENT_ID
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         assert factory._has_oidc_env_vars() is False
@@ -302,30 +296,23 @@ class TestGetK8sConfig:
         assert k8s_config.debug != original_debug
         assert api_client is not None
 
-    def test_get_k8s_config_with_default_config(self, mock_kubeconfig, monkeypatch):
-        """Test get_k8s_config with no arguments uses auto-detection."""
+    def test_get_k8s_config_with_auto_method(self, mock_kubeconfig, monkeypatch):
+        """Test get_k8s_config with method='auto' uses auto-detection."""
         from kubernetes.client import Configuration
 
         # Set KUBECONFIG env var for auto-detection
         monkeypatch.setenv("KUBECONFIG", str(mock_kubeconfig))
 
-        k8s_config = get_k8s_config()
+        k8s_config = get_k8s_config(AuthConfig(method="auto"))
 
         assert isinstance(k8s_config, Configuration)
 
-    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
-    @patch("kube_authkit.strategies.incluster.InClusterStrategy.is_available")
-    def test_get_k8s_config_raises_on_no_auth(
-        self, mock_incluster_avail, mock_kube_avail, mock_env_vars
-    ):
-        """Test get_k8s_config raises error when no auth available."""
-        mock_incluster_avail.return_value = False
-        mock_kube_avail.return_value = False
-
-        with pytest.raises(AuthenticationError) as exc_info:
+    def test_get_k8s_config_raises_without_method(self, mock_env_vars):
+        """Test get_k8s_config raises error when no method specified."""
+        with pytest.raises(ConfigurationError) as exc_info:
             get_k8s_config()
 
-        assert "No authentication method available" in str(exc_info.value)
+        assert "Authentication method must be specified" in str(exc_info.value)
 
     def test_get_k8s_client_uses_get_k8s_config(self, mock_kubeconfig):
         """Test get_k8s_client internally uses get_k8s_config."""
@@ -344,6 +331,50 @@ class TestGetK8sConfig:
         assert api_client.configuration.host == k8s_config.host
 
 
+class TestMethodRequired:
+    """Test that method must be explicitly specified."""
+
+    def test_no_method_raises_at_config(self, mock_env_vars):
+        """Test that AuthConfig() with no method raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            AuthConfig()
+
+        assert "Authentication method must be specified" in str(exc_info.value)
+
+    def test_no_method_raises_via_get_k8s_client(self, mock_env_vars):
+        """Test that get_k8s_client() with no config raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
+            get_k8s_client()
+
+        assert "Authentication method must be specified" in str(exc_info.value)
+
+    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
+    def test_explicit_method_works(self, mock_is_available, mock_env_vars):
+        """Test that explicit method works through factory."""
+        mock_is_available.return_value = True
+
+        config = AuthConfig(method="kubeconfig")
+        factory = AuthFactory(config)
+        strategy = factory.get_strategy()
+
+        from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
+
+        assert isinstance(strategy, KubeConfigStrategy)
+
+    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
+    def test_auto_method_works(self, mock_is_available, mock_env_vars):
+        """Test that method='auto' enables auto-detection."""
+        mock_is_available.return_value = True
+
+        config = AuthConfig(method="auto")
+        factory = AuthFactory(config)
+        strategy = factory.get_strategy()
+
+        from kube_authkit.strategies.kubeconfig import KubeConfigStrategy
+
+        assert isinstance(strategy, KubeConfigStrategy)
+
+
 class TestAuthKitEnvVars:
     """Test AUTHKIT_* environment variables."""
 
@@ -352,7 +383,7 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", "https://test.example.com/auth/realms/test")
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "test-client")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         assert config.oidc_issuer == "https://test.example.com/auth/realms/test"
         assert config.client_id == "test-client"
@@ -362,7 +393,7 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", "https://test.example.com")
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "my-client-id")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         assert config.client_id == "my-client-id"
 
@@ -370,7 +401,7 @@ class TestAuthKitEnvVars:
         """Test AUTHKIT_CLIENT_SECRET environment variable."""
         monkeypatch.setenv("AUTHKIT_CLIENT_SECRET", "secret-value")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         assert config.client_secret == "secret-value"
 
@@ -378,7 +409,7 @@ class TestAuthKitEnvVars:
         """Test AUTHKIT_TOKEN environment variable."""
         monkeypatch.setenv("AUTHKIT_TOKEN", "sha256~test-token")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         assert config.token == "sha256~test-token"
 
@@ -386,7 +417,7 @@ class TestAuthKitEnvVars:
         """Test AUTHKIT_API_HOST environment variable."""
         monkeypatch.setenv("AUTHKIT_API_HOST", "https://api.cluster.example.com:6443")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         assert config.k8s_api_host == "https://api.cluster.example.com:6443"
 
@@ -396,7 +427,9 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "from-env-client")
 
         # Explicit config should take precedence
-        config = AuthConfig(oidc_issuer="https://explicit.example.com", client_id="explicit-client")
+        config = AuthConfig(
+            method="auto", oidc_issuer="https://explicit.example.com", client_id="explicit-client"
+        )
 
         assert config.oidc_issuer == "https://explicit.example.com"
         assert config.client_id == "explicit-client"
@@ -406,7 +439,7 @@ class TestAuthKitEnvVars:
         monkeypatch.setenv("AUTHKIT_OIDC_ISSUER", "https://test.example.com")
         monkeypatch.setenv("AUTHKIT_CLIENT_ID", "test-client")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
         factory = AuthFactory(config)
 
         # Should detect OIDC env vars
@@ -420,7 +453,7 @@ class TestLegacyEnvVarFallback:
         """Test OPENSHIFT_TOKEN falls back when AUTHKIT_TOKEN not set."""
         monkeypatch.setenv("OPENSHIFT_TOKEN", "sha256~legacy-token")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         # Should use legacy env var
         assert config.token == "sha256~legacy-token"
@@ -430,7 +463,7 @@ class TestLegacyEnvVarFallback:
         monkeypatch.setenv("AUTHKIT_TOKEN", "sha256~new-token")
         monkeypatch.setenv("OPENSHIFT_TOKEN", "sha256~legacy-token")
 
-        config = AuthConfig()
+        config = AuthConfig(method="auto")
 
         # Should use new env var, not legacy
         assert config.token == "sha256~new-token"
@@ -454,7 +487,7 @@ class TestLegacyEnvVarFallback:
         monkeypatch.setenv("AUTHKIT_TOKEN", "sha256~env-token")
         monkeypatch.setenv("OPENSHIFT_TOKEN", "sha256~legacy-token")
 
-        config = AuthConfig(token="sha256~explicit-token")
+        config = AuthConfig(method="auto", token="sha256~explicit-token")
 
         # Explicit config should win
         assert config.token == "sha256~explicit-token"
