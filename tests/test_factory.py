@@ -52,35 +52,18 @@ class TestGetToken:
         mock_strategy.get_token.return_value = "test-bearer-token"
         mock_get_strategy.return_value = mock_strategy
 
-        token = get_token(AuthConfig())
+        token = get_token(AuthConfig(method="auto"))
 
         assert token == "test-bearer-token"
         mock_strategy.authenticate.assert_called_once()
         mock_strategy.get_token.assert_called_once()
 
-    @patch("kube_authkit.factory.AuthFactory.get_strategy")
-    def test_get_token_with_default_config(self, mock_get_strategy):
-        """Test get_token with no arguments uses default config."""
-        mock_strategy = Mock()
-        mock_strategy.authenticate.return_value = Mock()
-        mock_strategy.get_token.return_value = "default-token"
-        mock_get_strategy.return_value = mock_strategy
-
-        token = get_token()
-
-        assert token == "default-token"
-
-    @patch("kube_authkit.strategies.kubeconfig.KubeConfigStrategy.is_available")
-    @patch("kube_authkit.strategies.incluster.InClusterStrategy.is_available")
-    def test_get_token_raises_when_no_auth(
-        self, mock_incluster_avail, mock_kube_avail, mock_env_vars
-    ):
-        """Test get_token raises when no auth method available."""
-        mock_incluster_avail.return_value = False
-        mock_kube_avail.return_value = False
-
-        with pytest.raises(AuthenticationError):
+    def test_get_token_with_no_config_raises(self, mock_env_vars):
+        """Test get_token with no arguments raises ConfigurationError."""
+        with pytest.raises(ConfigurationError) as exc_info:
             get_token()
+
+        assert "Authentication method must be specified" in str(exc_info.value)
 
 
 class TestAuthFactoryStrategySelection:
