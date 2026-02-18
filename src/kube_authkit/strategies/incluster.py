@@ -170,6 +170,25 @@ class InClusterStrategy(AuthStrategy):
 
         return None
 
+    def get_token(self) -> str:
+        """Return the raw service account token string.
+
+        Reads the token directly from the service account token file.
+
+        Returns:
+            Raw bearer token string
+
+        Raises:
+            AuthenticationError: If the token file cannot be read
+        """
+        try:
+            return TOKEN_PATH.read_text().strip()
+        except OSError as e:
+            raise AuthenticationError(
+                "Failed to read service account token",
+                f"Could not read token from {TOKEN_PATH}: {e}",
+            ) from e
+
     def get_description(self) -> str:
         """Get description of this strategy.
 

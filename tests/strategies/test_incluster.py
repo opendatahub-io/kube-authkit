@@ -304,6 +304,31 @@ class TestInClusterStrategyNamespace:
         assert namespace is None
 
 
+class TestInClusterGetToken:
+    """Test get_token() method."""
+
+    def test_get_token_reads_token_from_file(self, mock_service_account):
+        """Test get_token reads token from service account token file."""
+        config = AuthConfig(method="incluster")
+        strategy = InClusterStrategy(config)
+
+        with patch("kube_authkit.strategies.incluster.TOKEN_PATH", mock_service_account / "token"):
+            token = strategy.get_token()
+
+        assert token == "test-sa-token-content"
+
+    def test_get_token_raises_when_file_missing(self):
+        """Test get_token raises AuthenticationError when token file is missing."""
+        config = AuthConfig(method="incluster")
+        strategy = InClusterStrategy(config)
+
+        with patch("kube_authkit.strategies.incluster.TOKEN_PATH", Path("/nonexistent/token")):
+            with pytest.raises(AuthenticationError) as exc_info:
+                strategy.get_token()
+
+        assert "Failed to read service account token" in str(exc_info.value)
+
+
 class TestInClusterStrategyDescription:
     """Test strategy description."""
 

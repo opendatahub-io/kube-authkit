@@ -343,6 +343,34 @@ class TestOpenShiftOAuthApiClientCreation:
         assert api_client.configuration.ssl_ca_cert == str(ca_cert)
 
 
+class TestOpenShiftGetToken:
+    """Test get_token() method."""
+
+    def test_get_token_returns_access_token(self):
+        """Test get_token returns access token after authenticate."""
+        config = AuthConfig(
+            method="openshift",
+            k8s_api_host="https://api.cluster.example.com:6443",
+        )
+        strategy = OpenShiftOAuthStrategy(config)
+        strategy._access_token = "sha256~test-token"
+
+        assert strategy.get_token() == "sha256~test-token"
+
+    def test_get_token_raises_before_authenticate(self):
+        """Test get_token raises AuthenticationError before authenticate."""
+        config = AuthConfig(
+            method="openshift",
+            k8s_api_host="https://api.cluster.example.com:6443",
+        )
+        strategy = OpenShiftOAuthStrategy(config)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            strategy.get_token()
+
+        assert "No access token available" in str(exc_info.value)
+
+
 class TestOpenShiftOAuthStrategyDescription:
     """Test strategy description."""
 

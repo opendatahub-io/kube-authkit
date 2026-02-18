@@ -15,6 +15,7 @@ from kubernetes import config as k8s_config
 from kubernetes.client import ApiClient
 from kubernetes.config import ConfigException
 
+from ..config import AuthConfig
 from ..exceptions import AuthenticationError, StrategyNotAvailableError
 from .base import AuthStrategy
 
@@ -38,6 +39,15 @@ class KubeConfigStrategy(AuthStrategy):
         >>> if strategy.is_available():
         ...     api_client = strategy.authenticate()
     """
+
+    def __init__(self, config: AuthConfig) -> None:
+        """Initialize KubeConfig strategy.
+
+        Args:
+            config: AuthConfig instance with kubeconfig parameters
+        """
+        super().__init__(config)
+        self._api_client: ApiClient | None = None
 
     def is_available(self) -> bool:
         """Check if kubeconfig file exists and is readable.
@@ -103,6 +113,7 @@ class KubeConfigStrategy(AuthStrategy):
                 api_client.configuration.verify_ssl = False
 
             logger.info("Successfully authenticated using kubeconfig")
+            self._api_client = api_client
             return api_client
 
         except ConfigException as e:
@@ -114,6 +125,31 @@ class KubeConfigStrategy(AuthStrategy):
             raise AuthenticationError(
                 "Unexpected error loading kubeconfig", f"Error: {type(e).__name__}: {str(e)}"
             ) from e
+
+    def get_token(self) -> str:
+        """Return the raw bearer token from the kubeconfig.
+
+        Extracts the bearer token from the stored ApiClient's configuration.
+
+        Returns:
+            Raw bearer token string
+
+        Raises:
+            AuthenticationError: If no token is available or auth is cert-based
+        """
+        if not self._api_client:
+            raise AuthenticationError(
+                "No token available",
+                "Call authenticate() before get_token().",
+            )
+        auth_header = self._api_client.configuration.api_key.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header.removeprefix("Bearer ")
+        raise AuthenticationError(
+            "No bearer token available in kubeconfig",
+            "The current kubeconfig context may use certificate-based authentication "
+            "instead of token-based authentication.",
+        )
 
     def _get_kubeconfig_path(self) -> str | None:
         """Determine the kubeconfig file path to use.

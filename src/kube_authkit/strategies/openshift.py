@@ -450,6 +450,22 @@ class OpenShiftOAuthStrategy(AuthStrategy):
         except Exception as e:
             logger.warning(f"Failed to save token to keyring: {e}")
 
+    def get_token(self) -> str:
+        """Return the raw OpenShift access token string.
+
+        Returns:
+            Raw bearer token string
+
+        Raises:
+            AuthenticationError: If no access token is available
+        """
+        if not self._access_token:
+            raise AuthenticationError(
+                "No access token available",
+                "Call authenticate() before get_token().",
+            )
+        return self._access_token
+
     def get_description(self) -> str:
         """Get description of this strategy.
 
